@@ -1,8 +1,8 @@
 use std::io::Result;
 use std::process::{Command, Output};
 use std::fs;
-use std::env;
 
+use crate::cache;
 
 fn execute(exe: &str, d2lodarg: &str, seed: &str, difficulty: &str) -> Result<Output> {
     Command::new(exe)
@@ -40,9 +40,7 @@ pub fn generate_data(seed: &str, difficulty: &str) -> String {
     seed_data.push_str("]}");
 
     // save to file
-    let temp_directory = env::temp_dir();
-    let cached_seed_data_file_name = format!("{}_{}.json", seed, difficulty);
-    let cached_seed_data_file = temp_directory.join(cached_seed_data_file_name);
+    let cached_seed_data_file = cache::cached_file_name(seed, difficulty);
     fs::write(cached_seed_data_file, &seed_data).expect("Unable to write map data file");
     return seed_data;
 
