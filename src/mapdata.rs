@@ -57,8 +57,6 @@ pub fn level_data_to_edges(level_data: &Map<String, Value>) -> Vec<Vec<i32>> {
             if cell == &0 {
                 let border = check_surrounding_pixels(&map_grid, row , col, lvl_width, lvl_height);
                 if border {
-                    // dbg!(row);
-                    // dbg!(col);
                     edge_map_grid[row][col] = 1;
                 }
             }

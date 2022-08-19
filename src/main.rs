@@ -5,6 +5,7 @@ use serde_json::{Value, Map};
 mod generate;
 mod cache;
 mod mapdata;
+mod image;
 
 fn main() {
     let seed: &str = "6263";
@@ -15,7 +16,8 @@ fn main() {
         let level_data: &Map<String, Value> = level_array.as_object().unwrap();
         if level_data["id"] == 1 {
             let map_grid = mapdata::level_data_to_edges(&level_data);
-            mapdata::print_map_grid(&map_grid);
+            // mapdata::print_map_grid(&map_grid);
+            image::generate_image(&map_grid);
         }
     }
 }
