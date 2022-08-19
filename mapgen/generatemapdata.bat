@@ -1,0 +1,1 @@
+d2-mapgen.exe ../d2lod --seed 23151351 --map 1 --difficulty 2
