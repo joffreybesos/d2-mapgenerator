@@ -34,9 +34,10 @@ pub fn generate_data(seed: &str, difficulty: &str) -> String {
     for line in stdout.lines() {
         if line.starts_with("{\"type\":\"map\"") {
             seed_data.push_str(line);
-            
+            seed_data.push_str(",");
         }
     }
+    seed_data.pop();
     seed_data.push_str("]}");
 
     // save to file
