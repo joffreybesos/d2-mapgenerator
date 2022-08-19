@@ -30,7 +30,6 @@ pub fn level_data_to_walkable(level_data: &Map<String, Value>) -> Vec<Vec<i32>> 
             if index == last_idx && fill {
                 // fix end of row
                 let extra_width = lvl_width.wrapping_sub(x).wrapping_sub(1);
-                dbg!(extra_width);
                 for num in 0..extra_width {
                     map_grid[y][num + x] = 1;
                 }
@@ -44,7 +43,85 @@ pub fn level_data_to_walkable(level_data: &Map<String, Value>) -> Vec<Vec<i32>> 
 }
 
 
-pub fn print_map_grid(map_grid: Vec<Vec<i32>>) {
+pub fn level_data_to_edges(level_data: &Map<String, Value>) -> Vec<Vec<i32>> {
+
+    let map_grid = level_data_to_walkable(&level_data);
+    
+    let lvl_width = level_data["size"]["width"].as_u64().unwrap() as usize;
+    let lvl_height = level_data["size"]["height"].as_u64().unwrap() as usize;
+
+    let mut edge_map_grid: Vec<Vec<i32>> = vec![vec![0; lvl_width]; lvl_height];
+
+    for (row, row_vec) in map_grid.iter().enumerate() {
+        for (col, cell) in row_vec.iter().enumerate() {
+            if cell == &0 {
+                let border = check_surrounding_pixels(&map_grid, row , col, lvl_width, lvl_height);
+                if border {
+                    // dbg!(row);
+                    // dbg!(col);
+                    edge_map_grid[row][col] = 1;
+                }
+            }
+        }
+    }
+    edge_map_grid
+    
+}
+
+
+fn check_surrounding_pixels(map_grid: &Vec<Vec<i32>>, irow: usize, icol: usize, width: usize, height: usize) -> bool {
+    // above row
+    if irow > 0 {
+        if icol > 0 {
+            if map_grid[irow-1][icol-1] == 1 {
+                return true
+            }
+        }
+        if map_grid[irow-1][icol] == 1 {
+            return true
+        }
+        if icol < width.wrapping_sub(1) {
+            if map_grid[irow-1][icol+1] == 1 {
+                return true
+            }
+        }
+    }
+    //same row
+    if icol > 0 {
+        if map_grid[irow][icol-1] == 1 {
+            return true
+        }
+    }
+    if icol < width.wrapping_sub(1) {
+        if map_grid[irow][icol+1] == 1 {
+            return true
+        }
+    }
+
+    // row beneath
+    if irow < height.wrapping_sub(1) {
+        if icol > 0 {
+            if map_grid[irow + 1][icol-1] == 1 {
+                return true
+            }
+        }
+        if map_grid[irow][icol] == 1 {
+            return true
+        }
+        if icol < width.wrapping_sub(1) {
+            if map_grid[irow + 1][icol+1] == 1 {
+                return true
+            }
+        }
+    }
+
+    false
+
+}
+
+
+
+pub fn print_map_grid(map_grid: &Vec<Vec<i32>>) {
     // output text
     for row in map_grid.iter() {
         let mut row_str = String::new();

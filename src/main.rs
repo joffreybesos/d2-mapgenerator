@@ -14,8 +14,8 @@ fn main() {
     for level_array in seed_data_json["levels"].as_array().unwrap() {
         let level_data: &Map<String, Value> = level_array.as_object().unwrap();
         if level_data["id"] == 1 {
-            let map_grid = mapdata::level_data_to_walkable(&level_data);
-            mapdata::print_map_grid(map_grid);
+            let map_grid = mapdata::level_data_to_edges(&level_data);
+            mapdata::print_map_grid(&map_grid);
         }
     }
 }
