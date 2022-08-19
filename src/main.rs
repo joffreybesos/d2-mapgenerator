@@ -4,6 +4,7 @@ use serde_json::{Value, Map};
 
 mod generate;
 mod cache;
+mod mapdata;
 
 fn main() {
     let seed: &str = "6263";
@@ -13,10 +14,10 @@ fn main() {
     for level_array in seed_data_json["levels"].as_array().unwrap() {
         let level_data: &Map<String, Value> = level_array.as_object().unwrap();
         if level_data["id"] == 1 {
-            println!("{}", level_data["map"]);
+            let map_grid = mapdata::level_data_to_walkable(&level_data);
+            mapdata::print_map_grid(map_grid);
         }
     }
-    // println!("{}", &seed_data);
 }
 
 
