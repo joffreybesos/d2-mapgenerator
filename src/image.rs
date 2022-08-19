@@ -1,6 +1,7 @@
 use raqote::*;
+use serde_json::{Value, Map};
 
-pub fn generate_image(map_grid: &Vec<Vec<i32>>) {
+pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &Map<String, Value>) {
     let height = map_grid.len();
     let width = map_grid[0].len();
     let mut dt = DrawTarget::new(width.try_into().unwrap(), height.try_into().unwrap());
@@ -14,5 +15,6 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>) {
             }
         }
     }
-    dt.write_png("out.png").unwrap();
+    let file_name = format!("{}.png", level_data["id"]);
+    dt.write_png(file_name).unwrap();
 }
