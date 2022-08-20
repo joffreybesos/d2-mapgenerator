@@ -29,15 +29,16 @@ fn main() {
     }
 
     let start = Instant::now();
-    println!("{} {}", "Using Diablo 2 1.13c files stored in".green(), d2lod.to_string_lossy().bright_green());
-    println!("{} {}", "Using blacha exe found in".green(), blachaexe.to_string_lossy().bright_green());
+    println!("{} '{}'", "Using Diablo 2 1.13c files stored in".green(), d2lod.to_string_lossy().bright_green());
+    println!("{} '{}'", "Using blacha exe found in".green(), blachaexe.to_string_lossy().bright_green());
 
     let seed_data_json: Value = generate::get_seed_data(seed, difficulty, d2lod, blachaexe);
     
     for level_array in seed_data_json["levels"].as_array().unwrap() {
         
         let level_data: &Map<String, Value> = level_array.as_object().unwrap();
-        if level_data["id"].as_u64().unwrap() == *mapid as u64 {
+
+        if level_data["id"].as_u64().unwrap() == *mapid as u64 || *mapid == 0 {
             let map_grid = mapdata::level_data_to_edges(&level_data);
             // let elapsed = start.elapsed();
             // println!("Generate grid: {} ms", elapsed.as_millis());

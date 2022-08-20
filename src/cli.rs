@@ -32,9 +32,9 @@ pub fn command_line_interface() -> ArgMatches {
             Arg::new("mapid")
                 .long("map")
                 .short('m')
-                .help("Map area 1-136")
+                .help("Map area 1-136, set to 0 or omit to generate for ALL maps")
                 .takes_value(true)
-                .required(true)
+                .default_value("0")
                 .value_parser(value_parser!(u32).range(0..137))
         )
         .arg(
