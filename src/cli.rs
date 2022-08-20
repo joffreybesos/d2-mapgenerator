@@ -1,4 +1,4 @@
-use clap::{Arg, ArgMatches, Command, builder::ValueParser};
+use clap::{Arg, ArgMatches, Command, value_parser};
 
 
 pub fn command_line_interface() -> ArgMatches {
@@ -16,7 +16,8 @@ pub fn command_line_interface() -> ArgMatches {
                 .takes_value(true)
                 .required(true)
                 // .allow_invalid_utf8(true)
-                .value_parser(ValueParser::os_string())
+                // .value_parser(ValueParser::os_string())
+                .value_parser(value_parser!(u32))
         )
         .arg(
             Arg::new("difficulty")
@@ -25,7 +26,7 @@ pub fn command_line_interface() -> ArgMatches {
                 .help("Game difficulty 0-2, 0 = normal, 1 = nightmare, 2 = hell")
                 .takes_value(true)
                 .required(true)
-                .value_parser(ValueParser::os_string())
+                .value_parser(value_parser!(u32).range(0..3))
         )
         .arg(
             Arg::new("mapid")
@@ -34,7 +35,7 @@ pub fn command_line_interface() -> ArgMatches {
                 .help("Map area 1-136")
                 .takes_value(true)
                 .required(true)
-                .value_parser(ValueParser::os_string())
+                .value_parser(value_parser!(u32).range(0..137))
         )
         .arg(
             Arg::new("d2lod")

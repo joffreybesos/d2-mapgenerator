@@ -7,7 +7,7 @@ use serde_json::Value;
 
 use crate::cache;
 
-pub fn get_seed_data(seed: &str, difficulty: &str, d2lod: &PathBuf, blachaexe: &PathBuf) -> Value {
+pub fn get_seed_data(seed: &u32, difficulty: &u32, d2lod: &PathBuf, blachaexe: &PathBuf) -> Value {
     let cached_seed_data_file = cache::cached_file_name(seed, difficulty);
     let seed_data_str: String = if Path::new(&cached_seed_data_file).exists() {
         println!("Reading cached map data from file {}", &cached_seed_data_file.to_str().unwrap());
@@ -30,19 +30,19 @@ fn delete_cached_file(cached_seed_data_file: &PathBuf) {
     fs::remove_file(cached_seed_data_file).unwrap();
 }
 
-fn execute(blachaexe: &PathBuf, d2lod: &PathBuf, seed: &str, difficulty: &str) -> Result<Output> {
+fn execute(blachaexe: &PathBuf, d2lod: &PathBuf, seed: &u32, difficulty: &u32) -> Result<Output> {
     Command::new(blachaexe)
         .arg(d2lod)
         .arg("--seed")
-        .arg(seed)
+        .arg(seed.to_string())
         .arg("--difficulty")
-        .arg(difficulty)
+        .arg(difficulty.to_string())
         // .arg("--map")
         // .arg("1")
         .output()
 }
 
-pub fn generate_data(seed: &str, difficulty: &str, d2lod: &PathBuf, blachaexe: &PathBuf) -> String {
+pub fn generate_data(seed: &u32, difficulty: &u32, d2lod: &PathBuf, blachaexe: &PathBuf) -> String {
     // generate data
     let output = execute(
         blachaexe,
