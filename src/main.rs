@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, time::Instant};
 
 use serde_json::{Value, Map};
 
@@ -8,18 +8,28 @@ mod mapdata;
 mod image;
 
 fn main() {
-    let seed: &str = "6263";
+    
+    let seed: &str = "76546";
     let difficulty: &str = "2";
+
+    let start = Instant::now();
+
     let seed_data_json: Value = get_seed_data(seed, difficulty);
     
     for level_array in seed_data_json["levels"].as_array().unwrap() {
+        
         let level_data: &Map<String, Value> = level_array.as_object().unwrap();
-        // if level_data["id"] == 1 {
-            let map_grid = mapdata::level_data_to_edges(&level_data);
-            // mapdata::print_map_grid(&map_grid);
-            image::generate_image(&map_grid, &level_data);
-        // }
+        let map_grid = mapdata::level_data_to_edges(&level_data);
+        // let elapsed = start.elapsed();
+        // println!("Generate grid: {} ms", elapsed.as_millis());
+        // mapdata::print_map_grid(&map_grid);
+        // let start = Instant::now();
+        image::generate_image(&map_grid, &level_data);
+        // let elapsed = start.elapsed();
+        // println!("Generated image for area {} in {}ms", level_data["id"], elapsed.as_millis());
     }
+    let elapsed = start.elapsed();
+    println!("Generated all images in {}ms", elapsed.as_millis());
 }
 
 

@@ -15,6 +15,6 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &Map<String, Value>)
             }
         }
     }
-    let file_name = format!("{}.png", level_data["id"]);
+    let file_name = format!("./images/{}.png", level_data["id"]);
     dt.write_png(file_name).unwrap();
 }
