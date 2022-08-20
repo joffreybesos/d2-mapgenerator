@@ -11,18 +11,12 @@ mod cli;
 fn main() {
     let matches: ArgMatches  = cli::command_line_interface();
     
-    
+    // yeah this is lazy sue me
     let seed = matches.value_of_os("seed").unwrap().to_str().unwrap();
     let difficulty = matches.value_of_os("difficulty").unwrap().to_str().unwrap();
     let mapid = matches.value_of_os("mapid").unwrap().to_str().unwrap();
 
-
-        // "E:/Dev/d2-mapserver-rust/mapgen/d2-mapgen.exe"
-    // let seed: &str = "76546";
-    // let difficulty: &str = "2";
-
     let start = Instant::now();
-    // let blachaexe = "./mapgen/d2-mapgen.exe";
 
     let d2lod = matches.get_one::<std::path::PathBuf>("d2lod").unwrap();
     let blachaexe = matches.get_one::<std::path::PathBuf>("blachaexe").unwrap();
