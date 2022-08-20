@@ -55,5 +55,14 @@ pub fn command_line_interface() -> ArgMatches {
                 .value_parser(clap::value_parser!(std::path::PathBuf))
                 .default_value("./mapgen/d2-mapgen.exe")
         )
+        .arg(
+            Arg::new("scale")
+                .long("scale")
+                .short('z')
+                .help("Pixel multiplier of the map image (optional)")
+                .takes_value(true)
+                .default_value("1")
+                .value_parser(value_parser!(u8).range(0..8))
+        )
         .get_matches()
 }
