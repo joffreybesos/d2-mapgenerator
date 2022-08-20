@@ -1,7 +1,8 @@
-use raqote::*;
-use serde_json::{Value, Map};
+use std::path::PathBuf;
 
-pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &Map<String, Value>) {
+use raqote::*;
+
+pub fn generate_image(map_grid: &Vec<Vec<i32>>, file_name: PathBuf) {
     let height = map_grid.len();
     let width = map_grid[0].len();
     let mut dt = DrawTarget::new(width.try_into().unwrap(), height.try_into().unwrap());
@@ -15,6 +16,5 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &Map<String, Value>)
             }
         }
     }
-    let file_name = format!("./images/{}.png", level_data["id"]);
     dt.write_png(file_name).unwrap();
 }

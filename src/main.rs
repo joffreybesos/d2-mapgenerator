@@ -24,7 +24,8 @@ fn main() {
         // println!("Generate grid: {} ms", elapsed.as_millis());
         // mapdata::print_map_grid(&map_grid);
         // let start = Instant::now();
-        image::generate_image(&map_grid, &level_data);
+        let image_file_name = cache::cached_image_file_name(seed, difficulty, &level_data["id"]);
+        image::generate_image(&map_grid, image_file_name);
         // let elapsed = start.elapsed();
         // println!("Generated image for area {} in {}ms", level_data["id"], elapsed.as_millis());
     }

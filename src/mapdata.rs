@@ -118,7 +118,7 @@ fn check_surrounding_pixels(map_grid: &Vec<Vec<i32>>, irow: usize, icol: usize, 
 }
 
 
-
+#[allow(dead_code)]
 pub fn print_map_grid(map_grid: &Vec<Vec<i32>>) {
     // output text
     for row in map_grid.iter() {
