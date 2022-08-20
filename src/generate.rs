@@ -1,12 +1,38 @@
 use std::io::Result;
+use std::path::{PathBuf, Path};
 use std::process::{Command, Output};
 use std::fs;
 
+use serde_json::Value;
+
 use crate::cache;
 
-fn execute(exe: &str, d2lodarg: &str, seed: &str, difficulty: &str) -> Result<Output> {
-    Command::new(exe)
-        .arg(d2lodarg)
+pub fn get_seed_data(seed: &str, difficulty: &str, d2lod: &PathBuf, blachaexe: &PathBuf) -> Value {
+    let cached_seed_data_file = cache::cached_file_name(seed, difficulty);
+    let seed_data_str: String = if Path::new(&cached_seed_data_file).exists() {
+        println!("Reading cached map data from file {}", &cached_seed_data_file.to_str().unwrap());
+        cache::read_cached_file(&cached_seed_data_file)
+    } else {
+        println!("Generating fresh data for seed {} and difficulty {}", seed, difficulty);
+        generate_data(seed, difficulty, d2lod, blachaexe)
+    };
+    let json = serde_json::from_str(&seed_data_str);
+    match json {
+        Ok(json) => json,
+        Err(_e) => {
+            delete_cached_file(&cached_seed_data_file);
+            panic!("Failed to generate map data!");
+        }
+    }
+}
+
+fn delete_cached_file(cached_seed_data_file: &PathBuf) {
+    fs::remove_file(cached_seed_data_file).unwrap();
+}
+
+fn execute(blachaexe: &PathBuf, d2lod: &PathBuf, seed: &str, difficulty: &str) -> Result<Output> {
+    Command::new(blachaexe)
+        .arg(d2lod)
         .arg("--seed")
         .arg(seed)
         .arg("--difficulty")
@@ -16,12 +42,11 @@ fn execute(exe: &str, d2lodarg: &str, seed: &str, difficulty: &str) -> Result<Ou
         .output()
 }
 
-
-pub fn generate_data(seed: &str, difficulty: &str) -> String {
+pub fn generate_data(seed: &str, difficulty: &str, d2lod: &PathBuf, blachaexe: &PathBuf) -> String {
     // generate data
     let output = execute(
-        "E:/Dev/d2-mapserver-rust/mapgen/d2-mapgen.exe",
-        "E:/Dev/d2-mapserver-rust/d2lod",
+        blachaexe,
+        d2lod,
         seed,
         difficulty
     )

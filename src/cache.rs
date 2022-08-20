@@ -15,7 +15,7 @@ pub fn cached_image_file_name(seed: &str, difficulty: &str, level_id: &Value) ->
 }
 
 
-pub fn read_cached_file(file_name: PathBuf) -> String {
+pub fn read_cached_file(file_name: &PathBuf) -> String {
     fs::read_to_string(file_name)
         .expect("Unable to read map data file")
 }
