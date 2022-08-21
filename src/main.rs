@@ -34,8 +34,8 @@ fn main() {
     println!("{} '{}'", "Using Diablo 2 1.13c files stored in".green(), d2lod.to_string_lossy().bright_green());
     println!("{} '{}'", "Using blacha exe found in".green(), blachaexe.to_string_lossy().bright_green());
 
-    let seed_data_json: Value = generate::get_seed_data(seed, difficulty, d2lod, blachaexe);
-    update::add_walkable_exits(&seed_data_json);
+    let mut seed_data_json: Value = generate::get_seed_data(seed, difficulty, d2lod, blachaexe);
+    seed_data_json = update::add_walkable_exits(&mut seed_data_json);
     
     for level_array in seed_data_json["levels"].as_array().unwrap() {
         

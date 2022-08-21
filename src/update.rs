@@ -11,16 +11,17 @@ fn valid_level(level_id: u64) -> bool {
     }
 }
 
-pub fn add_walkable_exits(seed_data_json: &Value) {
+pub fn add_walkable_exits(seed_data_json: &mut Value) -> &'static mut Value {
     for level_array in seed_data_json["levels"].as_array().unwrap() {
-        let level_data: &Map<String, Value> = level_array.as_object().unwrap();
+        let level_data: &Map<String, Value> = &level_array.as_object().
+        unwrap().clone();
         let level_id = level_data["id"].as_u64().unwrap();
         if valid_level(level_id) {
             println!("Found level {}", level_id);
-            top_exit(seed_data_json, level_data);
-            bottom_exit(seed_data_json, level_data);
-            right_exit(seed_data_json, level_data);
-            left_exit(seed_data_json, level_data);
+            seed_data_json = top_exit(seed_data_json, level_data);
+            seed_data_json = bottom_exit(seed_data_json, level_data);
+            seed_data_json = right_exit(seed_data_json, level_data);
+            seed_data_json = left_exit(seed_data_json, level_data);
         }
     }
 
@@ -32,17 +33,17 @@ pub fn add_walkable_exits(seed_data_json: &Value) {
     //   seedData = updateUnlabelledExit(seedData, 81, 82)
     
     //   return seedData;
-
+    &mut seed_data_json
 }
 
-fn top_exit(seed_data_json: &Value, level_data: &Map<String, Value>) {
+fn top_exit(seed_data_json: &mut Value, level_data: &Map<String, Value>) -> &mut Value {
     let level_id = level_data["id"].as_u64().unwrap();
     if let Some(tile_count) = level_data["map"][1][1].as_u64() {
         if valid_connector_width(level_id, tile_count)  {
             let exitx: u64 = level_data["map"][1][0].as_u64().unwrap() + (level_data["map"][1][1].as_u64().unwrap() / 2);
             let exity: u64 = 1;
             // println!("top {} {}", exitx, exity);
-            add_new_exit(seed_data_json, level_data, exitx, exity);
+            seed_data_json = add_new_exit(seed_data_json, level_data, exitx, exity);
         }
     }
 
@@ -52,12 +53,13 @@ fn top_exit(seed_data_json: &Value, level_data: &Map<String, Value>) {
             let exitx: u64 = level_data["map"][1][0].as_u64().unwrap() + level_data["map"][1][1].as_u64().unwrap() + level_data["map"][1][2].as_u64().unwrap() + (level_data["map"][1][3].as_u64().unwrap() / 2);
             let exity: u64 = 1;
             // println!("top2 {} {}", exitx, exity);
-            add_new_exit(seed_data_json, level_data, exitx, exity);
+            seed_data_json = add_new_exit(seed_data_json, level_data, exitx, exity);
         }
     }
+    seed_data_json
 }
 
-fn bottom_exit(seed_data_json: &Value, level_data: &Map<String, Value>) {
+fn bottom_exit(seed_data_json: &mut Value, level_data: &Map<String, Value>) -> &mut Value {
     let level_id = level_data["id"].as_u64().unwrap();
     let map_len = level_data["map"].as_array().unwrap().len().wrapping_sub(1);
     if let Some(tile_count) = level_data["map"][map_len][1].as_u64() {
@@ -65,7 +67,7 @@ fn bottom_exit(seed_data_json: &Value, level_data: &Map<String, Value>) {
             let exitx: u64 = level_data["map"][map_len][0].as_u64().unwrap() + (level_data["map"][map_len][1].as_u64().unwrap() / 2);
             let exity: u64 = level_data["size"]["height"].as_u64().unwrap();
             // println!("bottom {} {}", exitx, exity);
-            add_new_exit(seed_data_json, level_data, exitx, exity);
+            seed_data_json = add_new_exit(seed_data_json, level_data, exitx, exity);
         }
     }
 
@@ -75,12 +77,13 @@ fn bottom_exit(seed_data_json: &Value, level_data: &Map<String, Value>) {
             let exitx: u64 = level_data["map"][map_len][0].as_u64().unwrap() + level_data["map"][map_len][1].as_u64().unwrap() + level_data["map"][map_len][2].as_u64().unwrap() + (level_data["map"][map_len][3].as_u64().unwrap() / 2);
             let exity: u64 = level_data["size"]["height"].as_u64().unwrap();
             // println!("bottom2 {} {}", exitx, exity);
-            add_new_exit(seed_data_json, level_data, exitx, exity);
+            seed_data_json = add_new_exit(seed_data_json, level_data, exitx, exity);
         }
     }
+    seed_data_json
 }
 
-fn right_exit(seed_data_json: &Value, level_data: &Map<String, Value>) {
+fn right_exit(seed_data_json: &mut Value, level_data: &Map<String, Value>) -> &mut Value {
     let mut right_count = 0;
     let mut last_index = 0;
     let level_id = level_data["id"].as_u64().unwrap();
@@ -100,15 +103,16 @@ fn right_exit(seed_data_json: &Value, level_data: &Map<String, Value>) {
                     let exitx: u64 = level_data["size"]["width"].as_u64().unwrap();
                     let exity: u64 = (last_index - (right_count as usize / 2)).try_into().unwrap();
                     // println!("right {} {}", exitx, exity);
-                    add_new_exit(seed_data_json, level_data, exitx, exity);
+                    seed_data_json = add_new_exit(seed_data_json, level_data, exitx, exity);
                 }
             }
             right_count = 0;
         }
     }
+    seed_data_json
 }
 
-fn left_exit(seed_data_json: &Value, level_data: &Map<String, Value>) {
+fn left_exit(seed_data_json: &mut Value, level_data: &Map<String, Value>) -> &mut Value {
     let mut left_count = 0;
     let mut last_index = 0;
     let level_id = level_data["id"].as_u64().unwrap();
@@ -124,17 +128,17 @@ fn left_exit(seed_data_json: &Value, level_data: &Map<String, Value>) {
                         let exitx: u64 = 0;
                         let exity: u64 = (last_index - (left_count as usize / 2)).try_into().unwrap();
                         // println!("left {} {}", exitx, exity);
-                        add_new_exit(seed_data_json, level_data, exitx, exity);
+                        seed_data_json = add_new_exit(seed_data_json, level_data, exitx, exity);
                     }
                 }
                 left_count = 0;
             }
         }
     }
+    seed_data_json
 }
 
-fn add_new_exit(seed_data_json: &Value, level_data: &Map<String, Value>, exitx: u64, exity: u64) {
-    // let new_exit = format!(r#"{{ "id": 0, "type": "exit", "x": {}, "y": {} }}"#, exitx, exity);
+fn add_new_exit(seed_data_json: &mut Value, level_data: &Map<String, Value>, exitx: u64, exity: u64) {
     let new_exit = json!({
         "id": 0,
         "type": "exit",
@@ -160,12 +164,12 @@ fn add_new_exit(seed_data_json: &Value, level_data: &Map<String, Value>, exitx: 
     };
     if new_exit_id > 0 {
         let other_exit = convert_exit(seed_data_json, level_data, level_id, exitx, exity);
-        add_or_update_exit(seed_data_json, &new_exit_id, &other_exit);
+        seed_data_json = add_or_update_exit(seed_data_json, &new_exit_id, other_exit);
     }
-    add_or_update_exit(seed_data_json, &level_id, &new_exit);
+    seed_data_json = add_or_update_exit(seed_data_json, &level_id, new_exit);
 }
 
-fn convert_exit(seed_data_json: &Value, level_data: &Map<String, Value>, level_id: u64, exitx: u64, exity: u64) -> Value {
+fn convert_exit(seed_data_json: &mut Value, level_data: &Map<String, Value>, level_id: u64, exitx: u64, exity: u64) -> Value {
     let pointer = format!("/levels/{}", level_id - 1);
     let pointer_str: &str = pointer.as_str();
     let other_level_data = seed_data_json.pointer(pointer_str).unwrap();
@@ -180,51 +184,49 @@ fn convert_exit(seed_data_json: &Value, level_data: &Map<String, Value>, level_i
         "x": new_x,
         "y": new_y
     })
-    // format!(r#"{{"id": {}, "type": "exit", "x": {}, "y": {}}}"#, other_level_id, new_x, new_y)
 }
 
-fn add_or_update_exit(seed_data_json: &Value, level_id: &u64, new_exit_json: &Value) {
+fn add_or_update_exit(seed_data_json: &mut Value, level_id: &u64, new_exit_json: Value) -> &mut Value {
+    
     
     let pointer = format!("/levels/{}/objects", level_id - 1);
     let pointer_str: &str = pointer.as_str();
-    let objects = seed_data_json.pointer(pointer_str).unwrap();
-    for object in objects.as_array().unwrap() {
-        if object["type"] == "exit" {
-            let x = object["x"].as_u64().unwrap();
-            let y = object["y"].as_u64().unwrap();
+    let mut objects = seed_data_json.pointer(pointer_str).unwrap();
+    objects.as_array_mut().unwrap().push(new_exit_json);
+    seed_data_json
+    // for object in objects.as_array().unwrap() {
+    //     if object["type"] == "exit" {
+    //         let x = object["x"].as_u64().unwrap();
+    //         let y = object["y"].as_u64().unwrap();
             
-            let new_x = new_exit_json["x"].as_u64().unwrap();
-            let new_y = new_exit_json["y"].as_u64().unwrap();
+    //         let new_x = new_exit_json["x"].as_u64().unwrap();
+    //         let new_y = new_exit_json["y"].as_u64().unwrap();
             
-            if x.abs_diff(new_x) < 3 && y.abs_diff(new_y) < 3 {
-                if new_exit_json["id"].as_u64().unwrap() > 0 {
-                    //object["id"] = new_exit_json["id"];
-                }
-            } else {
-                // objects.as_array().unwrap().push(new_exit_json.clone());
-            }
-        }
-    }
+    //         println!("{} {}", new_exit_json["id"], level_id);
+    //         println!("{} {} {} {}", x, y, new_x, new_y);
+    //         if x.abs_diff(new_x) < 3 && y.abs_diff(new_y) < 3 {
+                
+    //             if let Some(new_id) = new_exit_json["id"].as_u64() {
+    //                 if new_id > 0 {
+    //                     println!("fiound");
+    //                 }
+    //                 // if let Value::Number(id) = &mut 0 {
+
+                        
+    //                 // }
+    //                 // object.extend([
+    //                 //     ("id".to_owned(), 
+    //                 // ]);
+                    
+    //                 //object["id"] = new_exit_json["id"];
+    //             };
+    //         } else {
+    //             objects.as_array().unwrap().push(new_exit_json);
+    //         }
+    //     }
+    // }
 }
 
-// function addOrUpdateExit(seedData: LevelList, levelid: number, newExit: Object) {
-//     let foundExit = seedData.levels
-//       .find((map) => map.id === levelid)
-//       .objects.find(
-//         (ojb) => ojb.type == "exit" && Math.abs(ojb.x - newExit.x) < 3 && Math.abs(ojb.y - newExit.y) < 3
-//       );
-//     if (foundExit) {
-//         // if it's already added
-//         if (newExit.id > 0) {
-//           // console.log("updating exit " + newExit.id);
-//           seedData.levels.find((map) => map.id === levelid).objects.find((ojb) => ojb.type == "exit" && Math.abs(ojb.x - newExit.x) < 3 && Math.abs(ojb.y - newExit.y) < 3).id = newExit.id;
-//         }
-//     } else {
-//         seedData.levels.find((map) => map.id === levelid).objects.push(newExit);
-//     }
-//     // console.log(seedData.levels.find((map) => map.id === levelid).objects.filter(ojb => ojb.type == "exit"));
-//     return seedData;
-// }
 
 // connector being tiles connecting to another level
 fn valid_connector_width(level_id: u64, tile_count: u64) -> bool {
