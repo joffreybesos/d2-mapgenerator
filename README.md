@@ -5,6 +5,8 @@ I've written the [d2-mapserver](https://github.com/joffreybesos/d2-mapserver) pr
 It still uses blacha's map generation tool to extract data from D2LoD.  
 You also need the d2lod files in a subfolder called `d2lod`
 
+All image files are generated in your windows user temp folder.
+
 ## Usage
 
     d2-mapserver-rust.exe [OPTIONS] --seed <seed> --difficulty <difficulty>
