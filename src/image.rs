@@ -18,11 +18,27 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &Map<String, Value>,
             }
         }
     }
+    draw_waypoints(&mut dt, &level_data, scale);
     draw_exits(&mut dt, &level_data, scale);
     draw_npcs(&mut dt, &level_data, scale);
     dt.write_png(file_name).unwrap();
 }
 
+fn draw_waypoints(dt: &mut DrawTarget, level_data: &Map<String, Value>, scale: usize) {
+    let src_yellow = &Source::Solid(SolidSource::from_unpremultiplied_argb(255, 255, 255, 0));
+    
+    let opts = &DrawOptions::new();
+
+    for object_array in level_data["objects"].as_array().unwrap() {
+        if object_array["name"] == "Waypoint" {
+            let box_width = 15. * scale as f32;
+            let box_height = 15. * scale as f32;
+            let x = ((object_array["x"].as_u64().unwrap() * scale as u64) as f32) - (box_width / 2.);
+            let y = ((object_array["y"].as_u64().unwrap() * scale as u64) as f32) - (box_height / 2.);
+            dt.fill_rect(x as f32, y as f32, box_width, box_height, src_yellow, opts);
+        }
+    }
+}
 
 fn draw_exits(dt: &mut DrawTarget, level_data: &Map<String, Value>, scale: usize) {
     let src_purple = &Source::Solid(SolidSource::from_unpremultiplied_argb(255, 255, 0, 255));
