@@ -1,13 +1,15 @@
 use std::time::Instant;
-use serde_json::{Value, Map};
 use clap::ArgMatches;
 use colored::*;
+
+use crate::data::SeedData;
 
 mod generate;
 mod cache;
 mod mapdata;
 mod image;
 mod cli;
+mod data;
 
 fn main() {
     let matches: ArgMatches  = cli::command_line_interface();
@@ -33,19 +35,24 @@ fn main() {
     println!("{} '{}'", "Using Diablo 2 1.13c files stored in".green(), d2lod.to_string_lossy().bright_green());
     println!("{} '{}'", "Using blacha exe found in".green(), blachaexe.to_string_lossy().bright_green());
 
-    let seed_data_json: Value = generate::get_seed_data(seed, difficulty, d2lod, blachaexe);
+    let seed_data_json: SeedData = generate::get_seed_data(seed, difficulty, d2lod, blachaexe);
+    // seed_data_json["levels"].as_array_mut().unwrap().push(json!({ 
+    //     "id": "137",
+    //     "name": "asdf",
+    // }));
+    // dbg!(&seed_data_json);
     
-    for level_array in seed_data_json["levels"].as_array().unwrap() {
-        
-        let level_data: &Map<String, Value> = level_array.as_object().unwrap();
-
-        if level_data["id"].as_u64().unwrap() == *mapid as u64 || *mapid == 0 {
+    
+    
+    
+    for level_data in seed_data_json.levels {
+        if level_data.id == *mapid || *mapid == 0 {
             let map_grid = mapdata::level_data_to_edges(&level_data);
             // let elapsed = start.elapsed();
             // println!("Generate grid: {} ms", elapsed.as_millis());
             // mapdata::print_map_grid(&map_grid);
             // let start = Instant::now();
-            let image_file_name = cache::cached_image_file_name(seed, difficulty, &level_data["id"]);
+            let image_file_name = cache::cached_image_file_name(seed, difficulty, &level_data.id);
             image::generate_image(&map_grid, &level_data, image_file_name, scale);
         }
         // let elapsed = start.elapsed();

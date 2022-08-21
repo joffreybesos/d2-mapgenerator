@@ -1,25 +1,24 @@
-use serde_json::{Value, Map};
+use crate::data::LevelData;
 
-pub fn level_data_to_walkable(level_data: &Map<String, Value>) -> Vec<Vec<i32>> {
+pub fn level_data_to_walkable(level_data: &LevelData) -> Vec<Vec<i32>> {
 
     
-    let lvl_width = level_data["size"]["width"].as_u64().unwrap() as usize;
-    let lvl_height = level_data["size"]["height"].as_u64().unwrap() as usize;
+    let lvl_width = level_data.size.width as usize;
+    let lvl_height = level_data.size.height as usize;
     
     let mut map_grid: Vec<Vec<i32>> = vec![vec![0; lvl_width]; lvl_height];
     
     let mut y: usize = 0;
-    for map_array in level_data["map"].as_array().unwrap() {
+    for map_rows in &level_data.map {
         // each row
         let mut fill: bool = false;
         let mut x: usize = 0;
-        let map_rows = map_array.as_array().unwrap();
 
         let last_idx = map_rows.len().wrapping_sub(1);
         
         for (index, map_row) in map_rows.iter().enumerate() {
             fill = !fill;
-            let width = map_row.as_u64().unwrap() as usize;
+            let width = *map_row as usize;
             if !fill {
                 for num in 0..width {
                     map_grid[y][num + x] = 1;
@@ -43,12 +42,12 @@ pub fn level_data_to_walkable(level_data: &Map<String, Value>) -> Vec<Vec<i32>> 
 }
 
 
-pub fn level_data_to_edges(level_data: &Map<String, Value>) -> Vec<Vec<i32>> {
+pub fn level_data_to_edges(level_data: &LevelData) -> Vec<Vec<i32>> {
 
     let map_grid = level_data_to_walkable(&level_data);
     
-    let lvl_width = level_data["size"]["width"].as_u64().unwrap() as usize;
-    let lvl_height = level_data["size"]["height"].as_u64().unwrap() as usize;
+    let lvl_width = level_data.size.width as usize;
+    let lvl_height = level_data.size.height as usize;
 
     let mut edge_map_grid: Vec<Vec<i32>> = vec![vec![0; lvl_width]; lvl_height];
 

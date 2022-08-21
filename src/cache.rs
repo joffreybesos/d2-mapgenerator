@@ -1,6 +1,5 @@
 use std::{env, path::{PathBuf}, fs};
 
-use serde_json::Value;
 
 pub fn cached_file_name(seed: &u32, difficulty: &u32) -> PathBuf {
     let temp_directory = env::temp_dir();
@@ -8,7 +7,7 @@ pub fn cached_file_name(seed: &u32, difficulty: &u32) -> PathBuf {
     temp_directory.join(cached_seed_data_file_name)
 }
 
-pub fn cached_image_file_name(seed: &u32, difficulty: &u32, level_id: &Value) -> PathBuf {
+pub fn cached_image_file_name(seed: &u32, difficulty: &u32, level_id: &u32) -> PathBuf {
     let temp_directory = env::temp_dir();
     let cached_seed_data_file_name = format!("map_{}_{}_{}.png", seed, difficulty, level_id);
     temp_directory.join(cached_seed_data_file_name)
