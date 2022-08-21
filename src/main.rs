@@ -20,7 +20,6 @@ fn main() {
     let mapid = matches.get_one::<u32>("mapid").unwrap();
     let scale = *matches.get_one::<u8>("scale").unwrap();
 
-
     let d2lod = matches.get_one::<std::path::PathBuf>("d2lod").unwrap();
     if !std::path::Path::new(&d2lod).exists() {
         panic!("{} '{}'", "ERROR: Diablo 2 LoD path does not exist! Make sure you have the d2 lod 1.13c game files located in".red().bold(), &d2lod.to_string_lossy().red());
@@ -36,14 +35,6 @@ fn main() {
     println!("{} '{}'", "Using blacha exe found in".green(), blachaexe.to_string_lossy().bright_green());
 
     let seed_data_json: SeedData = generate::get_seed_data(seed, difficulty, d2lod, blachaexe);
-    // seed_data_json["levels"].as_array_mut().unwrap().push(json!({ 
-    //     "id": "137",
-    //     "name": "asdf",
-    // }));
-    // dbg!(&seed_data_json);
-    
-    
-    
     
     for level_data in seed_data_json.levels {
         if level_data.id == *mapid || *mapid == 0 {
