@@ -2,7 +2,7 @@ use std::io::Result;
 use std::path::{PathBuf, Path};
 use std::process::{Command, Output};
 use std::fs;
-
+use colored::*;
 use serde_json::Value;
 
 use crate::cache;
@@ -21,7 +21,7 @@ pub fn get_seed_data(seed: &u32, difficulty: &u32, d2lod: &PathBuf, blachaexe: &
         Ok(json) => json,
         Err(_e) => {
             delete_cached_file(&cached_seed_data_file);
-            panic!("Failed to generate map data!");
+            panic!("{}", "Failed to generate map data!".red().bold());
         }
     }
 }
