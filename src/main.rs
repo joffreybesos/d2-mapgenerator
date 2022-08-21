@@ -8,7 +8,6 @@ mod cache;
 mod mapdata;
 mod image;
 mod cli;
-mod update;
 
 fn main() {
     let matches: ArgMatches  = cli::command_line_interface();
@@ -35,7 +34,6 @@ fn main() {
     println!("{} '{}'", "Using blacha exe found in".green(), blachaexe.to_string_lossy().bright_green());
 
     let seed_data_json: Value = generate::get_seed_data(seed, difficulty, d2lod, blachaexe);
-    update::add_walkable_exits(&seed_data_json);
     
     for level_array in seed_data_json["levels"].as_array().unwrap() {
         
