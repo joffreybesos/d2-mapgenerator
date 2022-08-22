@@ -9,15 +9,16 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_nam
     let scale = scale as usize;
     let mut dt: DrawTarget;
     if rotate {
+        // there has to be a better way, I hate this
         let angle: f64 = 45. * (std::f64::consts::PI / 180.);
         let rotated_width: f64 = ((width as f64) * angle.cos()).abs() + ((height as f64) * angle.sin()).abs();
         let rotated_height: f64 = ((width as f64) * angle.sin()).abs() + ((height as f64) * angle.cos()).abs();
         let x_translation: f64 = ((height as f64) * angle.sin()).abs();
-        println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
+        // println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
         dt = DrawTarget::new((rotated_width as i32) * scale as i32, (rotated_height as i32) * scale as i32);
         let translation = dt.get_transform()
             .then_rotate(euclid::Angle::degrees(45.0))
-            .then_translate(euclid::vec2((x_translation * scale as f64) as f32,0.));
+            .then_translate(euclid::vec2((x_translation * scale as f64) as f32, 0.));
         dt.set_transform(&translation);
     } else {
         dt = DrawTarget::new((width as i32) * scale as i32, (height as i32) * scale as i32);
@@ -48,8 +49,8 @@ fn draw_waypoints(dt: &mut DrawTarget, level_data: &LevelData, scale: usize) {
 
     for object in &level_data.objects {
         if object.name == "Waypoint" {
-            let box_width = 15. * scale as f32;
-            let box_height = 15. * scale as f32;
+            let box_width = 12. * scale as f32;
+            let box_height = 12. * scale as f32;
             let x = ((object.x * scale) as f32) - (box_width / 2.);
             let y = ((object.y * scale) as f32) - (box_height / 2.);
             dt.fill_rect(x as f32, y as f32, box_width, box_height, src_yellow, opts);
@@ -64,8 +65,8 @@ fn draw_exits(dt: &mut DrawTarget, level_data: &LevelData, scale: usize) {
 
     for object in &level_data.objects {
         if object.object_type == "exit" {
-            let box_width = 15. * scale as f32;
-            let box_height = 15. * scale as f32;
+            let box_width = 12. * scale as f32;
+            let box_height = 12. * scale as f32;
             let x = ((object.x * scale) as f32) - (box_width / 2.);
             let y = ((object.y * scale) as f32) - (box_height / 2.);
             if object.is_good_exit == true && level_data.id == 46 {
@@ -79,7 +80,7 @@ fn draw_exits(dt: &mut DrawTarget, level_data: &LevelData, scale: usize) {
 
 fn draw_npcs(dt: &mut DrawTarget, level_data: &LevelData, scale: usize) {
     let src_red = &Source::Solid(SolidSource::from_unpremultiplied_argb(255, 255, 0, 0));
-    let box_size = 10. * scale as f32;
+    let box_size = 8. * scale as f32;
 
     for object in &level_data.objects {
         // summoner
