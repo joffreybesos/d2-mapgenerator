@@ -1,6 +1,7 @@
 use std::time::Instant;
 use clap::ArgMatches;
 use colored::*;
+use rayon::prelude::*;
 
 use crate::data::SeedData;
 
@@ -36,19 +37,25 @@ fn main() {
 
     let seed_data_json: SeedData = generate::get_seed_data(seed, difficulty, d2lod, blachaexe);
     
-    for level_data in seed_data_json.levels {
-        if level_data.id == *mapid || *mapid == 0 {
-            let map_grid = mapdata::level_data_to_edges(&level_data);
-            // let elapsed = start.elapsed();
-            // println!("Generate grid: {} ms", elapsed.as_millis());
-            // mapdata::print_map_grid(&map_grid);
-            // let start = Instant::now();
-            let image_file_name = cache::cached_image_file_name(seed, difficulty, &level_data.id);
-            image::generate_image(&map_grid, &level_data, image_file_name, scale);
-        }
+    // generate levels in parallel
+    seed_data_json.levels.par_iter()
+        .for_each(|level_data| {
+            if level_data.id == *mapid || *mapid == 0 {
+                let edge_start = Instant::now();
+                let map_grid = mapdata::level_data_to_edges(&level_data);
+                let edge_elapsed = edge_start.elapsed();
+                
+                // mapdata::print_map_grid(&map_grid);
+                let image_start = Instant::now();
+                let image_file_name = cache::cached_image_file_name(seed, difficulty, &level_data.id);
+                image::generate_image(&map_grid, &level_data, image_file_name, scale);
+                let image_elapsed = image_start.elapsed();
+                println!("Generate {} grid in {}ms, image in {}ms", level_data.id, edge_elapsed.as_millis(), image_elapsed.as_millis());
+            }
+        });
         // let elapsed = start.elapsed();
         // println!("Generated image for area {} in {}ms", level_data["id"], elapsed.as_millis());
-    }
+    
     let elapsed = start.elapsed();
     println!("{} {}{}", "Finished in".green(), elapsed.as_millis().to_string().bright_green(), "ms".green());
 }
