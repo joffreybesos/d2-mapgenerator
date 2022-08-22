@@ -20,6 +20,8 @@ fn main() {
     let difficulty = matches.get_one::<u32>("difficulty").unwrap();
     let mapid = matches.get_one::<u32>("mapid").unwrap();
     let scale = *matches.get_one::<u8>("scale").unwrap();
+    let padding = *matches.get_one::<u16>("padding").unwrap();
+    let rotate = matches.is_present("rotate");
 
     let d2lod = matches.get_one::<std::path::PathBuf>("d2lod").unwrap();
     if !std::path::Path::new(&d2lod).exists() {
@@ -48,7 +50,7 @@ fn main() {
                 // mapdata::print_map_grid(&map_grid);
                 let image_start = Instant::now();
                 let image_file_name = cache::cached_image_file_name(seed, difficulty, &level_data.id);
-                image::generate_image(&map_grid, &level_data, image_file_name, scale);
+                image::generate_image(&map_grid, &level_data, image_file_name, scale, padding, rotate);
                 let image_elapsed = image_start.elapsed();
                 println!("Generate {} grid in {}ms, image in {}ms", level_data.id, edge_elapsed.as_millis(), image_elapsed.as_millis());
             }

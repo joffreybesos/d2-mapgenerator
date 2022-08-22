@@ -64,5 +64,22 @@ pub fn command_line_interface() -> ArgMatches {
                 .default_value("1")
                 .value_parser(value_parser!(u8).range(0..8))
         )
+        .arg(
+            Arg::new("padding")
+                .long("padding")
+                .short('p')
+                .help("Padding (in pixels) around map image")
+                .takes_value(true)
+                .default_value("0")
+                .value_parser(value_parser!(u16))
+        )
+        .arg(
+            Arg::new("rotate")
+                .long("rotate")
+                .short('r')
+                .help("Rotate the image 45 degrees")
+                .takes_value(false)
+                .required(false)
+        )
         .get_matches()
 }

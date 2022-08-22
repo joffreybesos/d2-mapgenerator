@@ -3,14 +3,31 @@ use raqote::*;
 
 use crate::data::{LevelData, Object};
 
-pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_name: PathBuf, scale: u8) {
-    let height = map_grid.len() as i32;
-    let width = map_grid[0].len() as i32;
+pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_name: PathBuf, scale: u8, padding: u16, rotate: bool) {
+    let height = map_grid.len() as f64;
+    let width = map_grid[0].len() as f64;
     let scale = scale as usize;
-    let mut dt = DrawTarget::new(width * scale as i32, height * scale as i32);
-    let src = &Source::Solid(SolidSource::from_unpremultiplied_argb(255, 128, 128, 128));
+    let mut dt: DrawTarget;
+    if rotate {
+        let angle: f64 = 45. * (std::f64::consts::PI / 180.);
+        let rotated_width: f64 = ((width as f64) * angle.cos()).abs() + ((height as f64) * angle.sin()).abs();
+        let rotated_height: f64 = ((width as f64) * angle.sin()).abs() + ((height as f64) * angle.cos()).abs();
+        let x_translation: f64 = ((height as f64) * angle.sin()).abs();
+        println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
+        dt = DrawTarget::new((rotated_width as i32) * scale as i32, (rotated_height as i32) * scale as i32);
+        let translation = dt.get_transform()
+            .then_rotate(euclid::Angle::degrees(45.0))
+            .then_translate(euclid::vec2((x_translation * scale as f64) as f32,0.));
+        dt.set_transform(&translation);
+    } else {
+        dt = DrawTarget::new((width as i32) * scale as i32, (height as i32) * scale as i32);
+    }
+    
     let opts = &DrawOptions::new();
-
+    let src = &Source::Solid(SolidSource::from_unpremultiplied_argb(255, 128, 128, 128));
+    //let src_trans = &Source::Solid(SolidSource::from_unpremultiplied_argb(96, 128, 128, 128));
+    // dt.fill_rect(0.,0., (width as i32 * scale as i32) as f32,  (height as i32 * scale as i32) as f32, src_trans, opts);
+    
     for (y, row) in map_grid.iter().enumerate() {
         for (x, cell) in row.iter().enumerate() {
             if cell != &0 {
