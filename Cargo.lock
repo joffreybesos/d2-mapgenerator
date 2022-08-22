@@ -222,8 +222,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "d2-mapserver-rust"
-version = "0.1.0"
+name = "d2-mapgenerator"
+version = "0.1.1"
 dependencies = [
  "clap",
  "colored",
