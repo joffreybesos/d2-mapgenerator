@@ -8,27 +8,29 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_nam
     let width = map_grid[0].len() as f64;
     let scale = scale as u32;
     let mut pixmap: Pixmap;
+    let mut pixmap2: Pixmap;
+    
+    let transform: Transform;
     if rotate {
         // there has to be a better way, I hate this
         let angle: f64 = 45. * (std::f64::consts::PI / 180.);
         let rotated_width: f64 = ((width as f64) * angle.cos()).abs() + ((height as f64) * angle.sin()).abs();
         let rotated_height: f64 = ((width as f64) * angle.sin()).abs() + ((height as f64) * angle.cos()).abs();
-        let x_translation: f64 = ((height as f64) * angle.sin()).abs();
-        println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
+        let x_translation = ((height as f64) * angle.sin()).abs();
+        // println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
         pixmap = Pixmap::new((rotated_width as u32) * scale, (rotated_height as u32) * scale).unwrap();
-        
-        // let translation = dt.get_transform()
-        //     .then_rotate(euclid::Angle::degrees(45.0))
-        //     .then_translate(euclid::vec2((x_translation * scale as f64) as f32, 0.));
-        // dt.set_transform(&translation);
+        pixmap2 = Pixmap::new((rotated_width as u32) * scale, (rotated_height as u32) * scale).unwrap();
+        transform = Transform::from_rotate(45.0).post_translate((x_translation * scale as f64) as f32, 0.);
     } else {
         pixmap = Pixmap::new((width as u32) * scale, (height as u32) * scale).unwrap();
+        pixmap2 = Pixmap::new((width as u32) * scale, (height as u32) * scale).unwrap();
+        transform = Transform::identity();
     }
     
+    // draw the tiles
     let mut paint = Paint::default();
-    paint.set_color_rgba8(127, 127, 127, 255);
+    paint.set_color_rgba8(170, 170, 170, 255);
     paint.anti_alias = true;
-    
     for (y, row) in map_grid.iter().enumerate() {
         for (x, cell) in row.iter().enumerate() {
             if cell != &0 {
@@ -40,9 +42,15 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_nam
     draw_waypoints(&mut pixmap, &level_data, scale);
     draw_exits(&mut pixmap, &level_data, scale);
     draw_npcs(&mut pixmap, &level_data, scale);
+
+    // apply the rotate transformation if rotating
+    let mut ppaint = PixmapPaint::default();
+    ppaint.quality = FilterQuality::Bicubic;
+    pixmap2.draw_pixmap(0, 0, pixmap.as_ref(), &ppaint, transform, None);
+
+    // save to disk
+    pixmap2.save_png(file_name).unwrap();
     
-    // pixmap.save_png("image.png").unwrap();
-    pixmap.save_png(file_name).unwrap();
 }
 
 fn draw_waypoints(pixmap: &mut Pixmap, level_data: &LevelData, scale: u32) {
@@ -56,7 +64,6 @@ fn draw_waypoints(pixmap: &mut Pixmap, level_data: &LevelData, scale: u32) {
             let box_height = 12. * scale as f32;
             let x = ((object.x as f32 * scale) as f32) - (box_width / 2.);
             let y = ((object.y as f32 * scale) as f32) - (box_height / 2.);
-            println!("{} {} {} {}", x, y, box_width, box_height);
             let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
             pixmap.fill_rect(rect, &yellow, Transform::identity(), None);
         }
@@ -114,7 +121,7 @@ fn draw_npcs(pixmap: &mut Pixmap, level_data: &LevelData, scale: u32) {
         if level_data.id == 49 && object.id == 744 {
             draw_dot(pixmap, object, box_size, scale, &red);
         }
-        // nihlithak
+        // nihlithak is calculated by the preset NPC on the _opposite_ side of the map
         if level_data.id == 124 && object.object_type == "npc" {
             let mut x = object.x;
             let mut y = object.y;
