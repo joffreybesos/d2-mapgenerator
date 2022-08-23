@@ -38,8 +38,8 @@ pub struct Object {
     pub id: u32,
     #[serde(alias = "type")]
     pub object_type: String,
-    pub x: usize,
-    pub y: usize,
+    pub x: u32,
+    pub y: u32,
     #[serde(default)]
     pub name: String,
     #[serde(default)]

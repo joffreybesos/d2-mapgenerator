@@ -58,6 +58,8 @@ pub fn level_data_to_edges(level_data: &LevelData) -> Vec<Vec<i32>> {
                 if border {
                     edge_map_grid[row][col] = 1;
                 }
+            } else if col == 0 || row == 0 {
+                edge_map_grid[row][col] = 1;
             }
         }
     }
