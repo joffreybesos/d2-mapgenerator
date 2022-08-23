@@ -3,7 +3,7 @@ use raqote::*;
 
 use crate::data::{LevelData, Object};
 
-pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_name: PathBuf, scale: u8, padding: u16, rotate: bool) {
+pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_name: PathBuf, scale: u8, rotate: bool) {
     let height = map_grid.len() as f64;
     let width = map_grid[0].len() as f64;
     let scale = scale as usize;
