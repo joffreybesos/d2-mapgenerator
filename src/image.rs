@@ -3,6 +3,17 @@ use tiny_skia::*;
 
 use crate::data::{LevelData, Object};
 
+pub struct ImageRequest {
+    pub seed: u32,
+    pub difficulty: u32,
+    pub mapid: u32,
+    pub d2lod: PathBuf,
+    pub blachaexe: PathBuf,
+    pub rotate: bool,
+    pub scale: u8
+}
+
+
 pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_name: PathBuf, scale: u8, rotate: bool) {
     let height = map_grid.len() as f64;
     let width = map_grid[0].len() as f64;
