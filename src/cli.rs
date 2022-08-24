@@ -3,13 +3,14 @@ use clap::{Arg, ArgMatches, Command, value_parser};
 pub fn command_line_interface() -> ArgMatches {
     Command::new("d2-mapgenerator")
         .about("Generate d2 map images")
-        .version("1.0.0")
+        .version("0.2.0")
         .arg_required_else_help(true)
         .author("joffreybesos")
         .disable_version_flag(true)
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(Command::new("generate")
+            .about("Generate the images directly into your user temp folder")
             .arg(
                 Arg::new("seed")
                     .short('s')
@@ -76,6 +77,7 @@ pub fn command_line_interface() -> ArgMatches {
             )
         )
         .subcommand(Command::new("server")
+            .about("Launch a REST API server to request and generate images")
             .arg(
                 Arg::new("port")
                     .short('p')
