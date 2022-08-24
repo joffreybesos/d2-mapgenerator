@@ -69,7 +69,6 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
 }
 
 pub fn generate(image_request: ImageRequest) {
-    
     let start = Instant::now();
     let seed_data_json: SeedData = blacha::get_seed_data(&image_request.seed, &image_request.difficulty, &image_request.d2lod, &image_request.blachaexe);
 
@@ -80,17 +79,13 @@ pub fn generate(image_request: ImageRequest) {
             let map_grid = mapdata::level_data_to_edges(&level_data);
             let edge_elapsed = edge_start.elapsed();
 
-            // mapdata::print_map_grid(&map_grid);
             let image_start = Instant::now();
             let image_file_name = cache::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
             image::generate_image(&map_grid, &level_data, image_file_name, image_request.scale, image_request.rotate);
             let image_elapsed = image_start.elapsed();
-            println!("Generate {} grid in {}ms, image in {}ms", level_data.id, edge_elapsed.as_millis(), image_elapsed.as_millis());
+            println!("Generated map {}, created grid in {}ms, image in {}ms", level_data.id, edge_elapsed.as_millis(), image_elapsed.as_millis());
         }
     });
-    // let elapsed = start.elapsed();
-    // println!("Generated image for area {} in {}ms", level_data["id"], elapsed.as_millis());
-
     let elapsed = start.elapsed();
     println!("{} {}{}", "Finished in".green(), elapsed.as_millis().to_string().bright_green(), "ms".green());
 }
