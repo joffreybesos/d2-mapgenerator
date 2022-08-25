@@ -1,8 +1,11 @@
-use actix_web::{get, web, HttpResponse, Responder, http::StatusCode};
+use actix_web::{get, http::StatusCode, web, HttpResponse, Responder};
 use colored::Colorize;
 use serde::Deserialize;
 
-use crate::{generate_single, image::{ImageRequest, MapImage}};
+use crate::{
+    generate_single,
+    image::{ImageRequest, MapImage},
+};
 
 #[derive(Debug, Deserialize)]
 pub struct Params {
@@ -63,26 +66,28 @@ pub async fn get_map_image(
         panic!("{} '{}'", "ERROR: d2-mapgen.exe not in configured location, you have missing files".red().bold(), blachaexe.to_string_lossy().red());
     }
 
-    let image_request = ImageRequest {
+    let image_request = ImageRequest::new(
         seed,
         difficulty,
         mapid,
-        d2lod: d2lod,
-        blachaexe: blachaexe.to_path_buf(),
+        d2lod.to_path_buf(),
+        blachaexe.to_path_buf(),
         rotate,
         scale,
-    };
+    );
 
-    let image_file_name = ImageRequest::cached_image_file_name(&image_request.seed, &image_request.difficulty, &image_request.mapid);
-    if std::path::Path::new(&image_file_name).exists() {
-        println!("Reading image from cache {}", image_file_name.to_str().unwrap());
-        let image_content = web::block(|| std::fs::read(image_file_name)).await.unwrap().unwrap();
-        
+    let cached_image_file_name = image_request.cached_image_file_name(&mapid);
+    if std::path::Path::new(&cached_image_file_name).exists() {
+        println!("Reading image from cache {}", cached_image_file_name.to_string_lossy());
+        let image_content = web::block(|| std::fs::read(cached_image_file_name))
+            .await
+            .unwrap()
+            .unwrap();
+
         HttpResponse::build(StatusCode::OK)
             .content_type("image/png")
             .body(image_content)
     } else {
-
         let map_image: Option<MapImage> = generate_single(image_request);
         match map_image {
             Some(p) => {

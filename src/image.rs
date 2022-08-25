@@ -10,19 +10,31 @@ pub struct ImageRequest {
     pub d2lod: PathBuf,
     pub blachaexe: PathBuf,
     pub rotate: bool,
-    pub scale: u8
+    pub scale: u8,
 }
 
 impl ImageRequest {
-    pub fn cached_image_file_name(seed: &u32, difficulty: &u32, level_id: &u32) -> PathBuf {
-        let temp_directory = env::temp_dir();
-        let cached_seed_data_file_name = format!("map_{}_{}_{}.png", seed, difficulty, level_id);
-        temp_directory.join(cached_seed_data_file_name)
+    pub fn new(seed: u32, difficulty: u32, mapid: u32, d2lod: PathBuf, blachaexe: PathBuf, rotate: bool, scale: u8) -> ImageRequest {
+        
+        ImageRequest {
+            seed,
+            difficulty,
+            mapid,
+            d2lod: d2lod.to_path_buf(),
+            blachaexe: blachaexe.to_path_buf(),
+            rotate,
+            scale,
+        }
     }
-    pub fn cached_header_file_name(seed: &u32, difficulty: &u32, level_id: &u32) -> PathBuf {
+    pub fn cached_image_file_name(&self, level_id: &u32) -> PathBuf {
         let temp_directory = env::temp_dir();
-        let cached_seed_data_file_name = format!("map_{}_{}_{}.txt", seed, difficulty, level_id);
-        temp_directory.join(cached_seed_data_file_name)
+        let cached_image_file_name = format!("map_{}_{}_{}.png", self.seed, self.difficulty, level_id);
+        temp_directory.join(cached_image_file_name)
+    }
+    pub fn cached_header_file_name(&self, level_id: &u32) -> PathBuf {
+        let temp_directory = env::temp_dir();
+        let cached_header_file_name = format!("map_{}_{}_{}.txt", self.seed, self.difficulty, level_id);
+        temp_directory.join(cached_header_file_name)
     }
 }
 
@@ -34,22 +46,24 @@ pub struct MapImage {
     pub rotated: bool,
     pub map_width: u32,
     pub map_height: u32,
+    pub scale: u32,
     pub pixmap: Pixmap
 }
 
 
-pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_name: PathBuf, scale: u8, rotate: bool) -> MapImage {
+pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_request: &ImageRequest) -> MapImage {
     let mut height = map_grid.len() as f64;
     let mut width = map_grid[0].len() as f64;
-    let scale = scale as u32;
+    let scale = image_request.scale as u32;
     let mut pixmap: Pixmap;
     let transform: Transform;
-    if rotate {
+    if image_request.rotate {
         // there has to be a better way, I hate this
         let angle: f64 = 45. * (std::f64::consts::PI / 180.);
+        let x_translation = ((height as f64) * angle.sin()).abs();
         width = ((width as f64) * angle.cos()).abs() + ((height as f64) * angle.sin()).abs();
         height = ((width as f64) * angle.sin()).abs() + ((height as f64) * angle.cos()).abs();
-        let x_translation = ((height as f64) * angle.sin()).abs();
+        
         // println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
         pixmap = Pixmap::new((width as u32) * scale, (height as u32) * scale).unwrap();
         transform = Transform::from_rotate(45.0).post_scale(scale as f32, scale as f32).post_translate((x_translation * scale as f64) as f32, 0.);
@@ -74,16 +88,17 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_nam
     draw_npcs(&mut pixmap, &level_data, transform);
 
     // save to disk
-    pixmap.save_png(file_name).unwrap();
-
-    MapImage {     
+    pixmap.save_png(image_request.cached_image_file_name(&level_data.id).as_path()).unwrap();
+    println!("Saved to {}", image_request.cached_image_file_name(&level_data.id).to_string_lossy());
+    MapImage {
         offsetx: level_data.offset.x,
         offsety: level_data.offset.y,
         image_width: width as u32,
         image_height: height as u32,
-        rotated: rotate,
+        rotated: image_request.rotate,
         map_width: level_data.size.width,
         map_height: level_data.size.height,
+        scale,
         pixmap
     }
 }

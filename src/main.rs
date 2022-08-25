@@ -63,7 +63,7 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
     println!("{} '{}'", "Using Diablo 2 1.13c files stored in".green(), d2lod.to_string_lossy().bright_green());
     println!("{} '{}'", "Using blacha exe found in".green(), blachaexe.to_string_lossy().bright_green());
 
-    let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale };
+    let image_request = ImageRequest::new(seed, difficulty, mapid, d2lod.to_path_buf(), blachaexe.to_path_buf(), rotate, scale);
     if mapid == 0 {
         generate_all(image_request);
     } else {
@@ -85,8 +85,7 @@ pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
         let edge_elapsed = edge_start.elapsed();
 
         let image_start = Instant::now();
-        let image_file_name = ImageRequest::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
-        let map_image: MapImage = image::generate_image(&map_grid, &level_data, image_file_name, image_request.scale, image_request.rotate);
+        let map_image: MapImage = image::generate_image(&map_grid, &level_data, &image_request);
         let image_elapsed = image_start.elapsed();
         println!("Generated single map {}, created grid in {}ms, image in {}ms", level_data.id, edge_elapsed.as_millis(), image_elapsed.as_millis());
         
@@ -113,8 +112,7 @@ pub fn generate_all(image_request: ImageRequest) {
             let edge_elapsed = edge_start.elapsed();
 
             let image_start = Instant::now();
-            let image_file_name = ImageRequest::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
-            image::generate_image(&map_grid, &level_data, image_file_name, image_request.scale, image_request.rotate);
+            image::generate_image(&map_grid, &level_data, &image_request);
             let image_elapsed = image_start.elapsed();
             println!("Generated map {}, created grid in {}ms, image in {}ms", level_data.id, edge_elapsed.as_millis(), image_elapsed.as_millis());
         }
