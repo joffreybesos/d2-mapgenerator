@@ -1,7 +1,7 @@
-use std::{path::PathBuf, env};
+use std::{path::PathBuf};
 use tiny_skia::*;
 
-use crate::data::{LevelData, Object};
+use crate::{data::{LevelData, Object}, cache};
 
 pub struct ImageRequest {
     pub seed: u32,
@@ -11,31 +11,6 @@ pub struct ImageRequest {
     pub blachaexe: PathBuf,
     pub rotate: bool,
     pub scale: u8,
-}
-
-impl ImageRequest {
-    pub fn new(seed: u32, difficulty: u32, mapid: u32, d2lod: PathBuf, blachaexe: PathBuf, rotate: bool, scale: u8) -> ImageRequest {
-        
-        ImageRequest {
-            seed,
-            difficulty,
-            mapid,
-            d2lod: d2lod.to_path_buf(),
-            blachaexe: blachaexe.to_path_buf(),
-            rotate,
-            scale,
-        }
-    }
-    pub fn cached_image_file_name(&self, level_id: &u32) -> PathBuf {
-        let temp_directory = env::temp_dir();
-        let cached_image_file_name = format!("map_{}_{}_{}.png", self.seed, self.difficulty, level_id);
-        temp_directory.join(cached_image_file_name)
-    }
-    pub fn cached_header_file_name(&self, level_id: &u32) -> PathBuf {
-        let temp_directory = env::temp_dir();
-        let cached_header_file_name = format!("map_{}_{}_{}.txt", self.seed, self.difficulty, level_id);
-        temp_directory.join(cached_header_file_name)
-    }
 }
 
 pub struct MapImage {
@@ -88,8 +63,9 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
     draw_npcs(&mut pixmap, &level_data, transform);
 
     // save to disk
-    pixmap.save_png(image_request.cached_image_file_name(&level_data.id).as_path()).unwrap();
-    println!("Saved to {}", image_request.cached_image_file_name(&level_data.id).to_string_lossy());
+    let cached_image_file_name = cache::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
+    pixmap.save_png(cached_image_file_name.as_path()).unwrap();
+    println!("Saved to {}", cached_image_file_name.to_string_lossy());
     MapImage {
         offsetx: level_data.offset.x,
         offsety: level_data.offset.y,

@@ -63,7 +63,7 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
     println!("{} '{}'", "Using Diablo 2 1.13c files stored in".green(), d2lod.to_string_lossy().bright_green());
     println!("{} '{}'", "Using blacha exe found in".green(), blachaexe.to_string_lossy().bright_green());
 
-    let image_request = ImageRequest::new(seed, difficulty, mapid, d2lod.to_path_buf(), blachaexe.to_path_buf(), rotate, scale);
+    let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale };
     if mapid == 0 {
         generate_all(image_request);
     } else {

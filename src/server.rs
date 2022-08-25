@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 use crate::{
     generate_single,
-    image::{ImageRequest, MapImage},
+    image::{ImageRequest, MapImage}, cache,
 };
 
 #[derive(Debug, Deserialize)]
@@ -66,17 +66,9 @@ pub async fn get_map_image(
         panic!("{} '{}'", "ERROR: d2-mapgen.exe not in configured location, you have missing files".red().bold(), blachaexe.to_string_lossy().red());
     }
 
-    let image_request = ImageRequest::new(
-        seed,
-        difficulty,
-        mapid,
-        d2lod.to_path_buf(),
-        blachaexe.to_path_buf(),
-        rotate,
-        scale,
-    );
+    let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale };
 
-    let cached_image_file_name = image_request.cached_image_file_name(&mapid);
+    let cached_image_file_name = cache::cached_image_file_name(&seed, &difficulty, &mapid);
     if std::path::Path::new(&cached_image_file_name).exists() {
         println!("Reading image from cache {}", cached_image_file_name.to_string_lossy());
         let image_content = web::block(|| std::fs::read(cached_image_file_name))
