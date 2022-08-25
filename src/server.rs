@@ -1,5 +1,3 @@
-use std::io::Read;
-
 use actix_web::{get, web, HttpResponse, Responder, http::StatusCode};
 use colored::Colorize;
 use serde::Deserialize;
