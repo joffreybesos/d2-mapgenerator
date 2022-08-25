@@ -65,7 +65,7 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
     println!("{} '{}'", "Using blacha exe found in".green(), blachaexe.to_string_lossy().bright_green());
 
     let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale };
-    if mapid > 0 {
+    if mapid == 0 {
         generate_all(image_request);
     } else {
         generate_single(image_request);
@@ -95,8 +95,7 @@ pub fn generate_single(image_request: ImageRequest) -> Option<Pixmap> {
         println!("{} {}{}", "Finished in".green(), elapsed.as_millis().to_string().bright_green(), "ms".green());    
         Some(pixmap)
     } else {
-        let elapsed = start.elapsed();
-        println!("{} {} {}{}", "Error generating map".red(), image_request.mapid, elapsed.as_millis().to_string().bright_red(), "ms".green());    
+        println!("{} {}", "Error generating map".red(), image_request.mapid.to_string().red());
         None
     }
     
