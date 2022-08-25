@@ -2,7 +2,7 @@ use actix_web::{get, web, HttpResponse, Responder, http::StatusCode};
 use colored::Colorize;
 use serde::Deserialize;
 
-use crate::{generate_single, image::ImageRequest, cache};
+use crate::{generate_single, image::{ImageRequest, MapImage}};
 
 #[derive(Debug, Deserialize)]
 pub struct Params {
@@ -18,7 +18,7 @@ pub struct SeedValues {
 }
 
 #[get("/v1/map/{seed}/{difficulty}/{mapid}/image")]
-pub async fn map_image(
+pub async fn get_map_image(
     path_params: web::Path<SeedValues>,
     query: web::Query<Params>,
 ) -> impl Responder {
@@ -73,7 +73,7 @@ pub async fn map_image(
         scale,
     };
 
-    let image_file_name = cache::cached_image_file_name(&image_request.seed, &image_request.difficulty, &image_request.mapid);
+    let image_file_name = ImageRequest::cached_image_file_name(&image_request.seed, &image_request.difficulty, &image_request.mapid);
     if std::path::Path::new(&image_file_name).exists() {
         println!("Reading image from cache {}", image_file_name.to_str().unwrap());
         let image_content = web::block(|| std::fs::read(image_file_name)).await.unwrap().unwrap();
@@ -83,12 +83,11 @@ pub async fn map_image(
             .body(image_content)
     } else {
 
-        let pixmap = generate_single(image_request);
-
-        match pixmap {
+        let map_image: Option<MapImage> = generate_single(image_request);
+        match map_image {
             Some(p) => {
                 // let response = format!("Generated {} {} {}", path_params.seed, path_params.difficulty, path_params.mapid);
-                let pngdata = p.encode_png().unwrap();
+                let pngdata = p.pixmap.encode_png().unwrap();
                 HttpResponse::build(StatusCode::OK)
                     .content_type("image/png")
                     .body(pngdata)

@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, env};
 use tiny_skia::*;
 
 use crate::data::{LevelData, Object};
@@ -13,21 +13,45 @@ pub struct ImageRequest {
     pub scale: u8
 }
 
+impl ImageRequest {
+    pub fn cached_image_file_name(seed: &u32, difficulty: &u32, level_id: &u32) -> PathBuf {
+        let temp_directory = env::temp_dir();
+        let cached_seed_data_file_name = format!("map_{}_{}_{}.png", seed, difficulty, level_id);
+        temp_directory.join(cached_seed_data_file_name)
+    }
+    pub fn cached_header_file_name(seed: &u32, difficulty: &u32, level_id: &u32) -> PathBuf {
+        let temp_directory = env::temp_dir();
+        let cached_seed_data_file_name = format!("map_{}_{}_{}.txt", seed, difficulty, level_id);
+        temp_directory.join(cached_seed_data_file_name)
+    }
+}
 
-pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_name: PathBuf, scale: u8, rotate: bool) -> Pixmap {
-    let height = map_grid.len() as f64;
-    let width = map_grid[0].len() as f64;
+pub struct MapImage {
+    pub offsetx: u32,
+    pub offsety: u32,
+    pub image_width: u32,
+    pub image_height: u32,
+    pub rotated: bool,
+    pub map_width: u32,
+    pub map_height: u32,
+    pub pixmap: Pixmap
+}
+
+
+pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_name: PathBuf, scale: u8, rotate: bool) -> MapImage {
+    let mut height = map_grid.len() as f64;
+    let mut width = map_grid[0].len() as f64;
     let scale = scale as u32;
     let mut pixmap: Pixmap;
     let transform: Transform;
     if rotate {
         // there has to be a better way, I hate this
         let angle: f64 = 45. * (std::f64::consts::PI / 180.);
-        let rotated_width: f64 = ((width as f64) * angle.cos()).abs() + ((height as f64) * angle.sin()).abs();
-        let rotated_height: f64 = ((width as f64) * angle.sin()).abs() + ((height as f64) * angle.cos()).abs();
+        width = ((width as f64) * angle.cos()).abs() + ((height as f64) * angle.sin()).abs();
+        height = ((width as f64) * angle.sin()).abs() + ((height as f64) * angle.cos()).abs();
         let x_translation = ((height as f64) * angle.sin()).abs();
         // println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
-        pixmap = Pixmap::new((rotated_width as u32) * scale, (rotated_height as u32) * scale).unwrap();
+        pixmap = Pixmap::new((width as u32) * scale, (height as u32) * scale).unwrap();
         transform = Transform::from_rotate(45.0).post_scale(scale as f32, scale as f32).post_translate((x_translation * scale as f64) as f32, 0.);
     } else {
         pixmap = Pixmap::new((width as u32) * scale, (height as u32) * scale).unwrap();
@@ -51,8 +75,17 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, file_nam
 
     // save to disk
     pixmap.save_png(file_name).unwrap();
-    pixmap
-    
+
+    MapImage {     
+        offsetx: level_data.offset.x,
+        offsety: level_data.offset.y,
+        image_width: width as u32,
+        image_height: height as u32,
+        rotated: rotate,
+        map_width: level_data.size.width,
+        map_height: level_data.size.height,
+        pixmap
+    }
 }
 
 fn draw_waypoints(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) {

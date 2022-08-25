@@ -3,10 +3,9 @@ use clap::ArgMatches;
 use colored::*;
 use image::ImageRequest;
 use rayon::prelude::*;
-use tiny_skia::Pixmap;
 use std::{time::Instant};
 
-use crate::{data::SeedData, server::{map_image}};
+use crate::{data::SeedData, server::get_map_image, image::MapImage};
 
 mod cache;
 mod cli;
@@ -31,7 +30,7 @@ async fn main() -> std::io::Result<()> {
             let port = *server_args.get_one::<u16>("port").unwrap();
             println!("Running server on 127.0.0.1:{}", port);
             HttpServer::new(|| {
-                App::new().service(map_image)
+                App::new().service(get_map_image)
             })
             .bind(("127.0.0.1", port))?
             .run()
@@ -74,7 +73,7 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
 }
 
 
-pub fn generate_single(image_request: ImageRequest) -> Option<Pixmap> {
+pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
     let start = Instant::now();
     let seed_data_json: SeedData = blacha::get_seed_data(&image_request.seed, &image_request.difficulty, &image_request.d2lod, &image_request.blachaexe);
 
@@ -86,14 +85,15 @@ pub fn generate_single(image_request: ImageRequest) -> Option<Pixmap> {
         let edge_elapsed = edge_start.elapsed();
 
         let image_start = Instant::now();
-        let image_file_name = cache::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
-        let pixmap = image::generate_image(&map_grid, &level_data, image_file_name, image_request.scale, image_request.rotate);
+        let image_file_name = ImageRequest::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
+        let map_image: MapImage = image::generate_image(&map_grid, &level_data, image_file_name, image_request.scale, image_request.rotate);
         let image_elapsed = image_start.elapsed();
         println!("Generated single map {}, created grid in {}ms, image in {}ms", level_data.id, edge_elapsed.as_millis(), image_elapsed.as_millis());
         
         let elapsed = start.elapsed();
-        println!("{} {}{}", "Finished in".green(), elapsed.as_millis().to_string().bright_green(), "ms".green());    
-        Some(pixmap)
+        println!("{} {}{}", "Finished in".green(), elapsed.as_millis().to_string().bright_green(), "ms".green());
+
+        Some(map_image)
     } else {
         println!("{} {}", "Error generating map".red(), image_request.mapid.to_string().red());
         None
@@ -113,7 +113,7 @@ pub fn generate_all(image_request: ImageRequest) {
             let edge_elapsed = edge_start.elapsed();
 
             let image_start = Instant::now();
-            let image_file_name = cache::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
+            let image_file_name = ImageRequest::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
             image::generate_image(&map_grid, &level_data, image_file_name, image_request.scale, image_request.rotate);
             let image_elapsed = image_start.elapsed();
             println!("Generated map {}, created grid in {}ms, image in {}ms", level_data.id, edge_elapsed.as_millis(), image_elapsed.as_millis());
