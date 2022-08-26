@@ -79,13 +79,13 @@ pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
     let mut seed_data_json: SeedData = blacha::get_seed_data(&image_request.seed, &image_request.difficulty, &image_request.d2lod, &image_request.blachaexe);
     walkableexits::get_walkable_exits(&mut seed_data_json);
 
-    for level in  seed_data_json.levels.iter() {
-        for obj in level.objects.iter() {
-            if obj.id == 0 {
-                println!("{} exit {} {} {}", level.id, obj.id, level.offset.x + obj.x, level.offset.y + obj.y);
-            }
-        }
-    }
+    // for level in  seed_data_json.levels.iter() {
+    //     for obj in level.objects.iter() {
+    //         if obj.id == 0 {
+    //             println!("{} exit {} {} {}", level.id, obj.id, level.offset.x + obj.x, level.offset.y + obj.y);
+    //         }
+    //     }
+    // }
     
     // generate levels in parallel
     if let Some(level_data) = seed_data_json.levels.iter().find(|a| a.id == image_request.mapid) {
