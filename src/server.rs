@@ -1,4 +1,6 @@
-use actix_web::{get, http::StatusCode, web, HttpResponse, Responder};
+use std::{str::FromStr, path::Path};
+
+use actix_web::{get, http::{StatusCode, header::{HeaderName, HeaderValue}}, web, HttpResponse, Responder};
 use colored::Colorize;
 use serde::Deserialize;
 
@@ -68,34 +70,40 @@ pub async fn get_map_image(
 
     let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale };
 
-    let cached_image_file_name = cache::cached_image_file_name(&seed, &difficulty, &mapid);
-    if std::path::Path::new(&cached_image_file_name).exists() {
-        println!("Reading image from cache {}", cached_image_file_name.to_string_lossy());
-        let image_content = web::block(|| std::fs::read(cached_image_file_name))
-            .await
-            .unwrap()
-            .unwrap();
+    
+    // let cached_image_file_name = cache::cached_image_file_name(&seed, &difficulty, &mapid);
+    // if Path::new(&cached_image_file_name).exists() {
+    //     let image_content = cache::read_cached_image(&cached_image_file_name).await;
 
-        HttpResponse::build(StatusCode::OK)
-            .content_type("image/png")
-            .body(image_content)
-    } else {
-        let map_image: Option<MapImage> = generate_single(image_request);
-        match map_image {
-            Some(p) => {
-                // let response = format!("Generated {} {} {}", path_params.seed, path_params.difficulty, path_params.mapid);
-                let pngdata = p.pixmap.encode_png().unwrap();
-                HttpResponse::build(StatusCode::OK)
-                    .content_type("image/png")
-                    .body(pngdata)
-            }
-            None => {
-                let response = format!(
-                    "Error generating image {} {} {}",
-                    path_params.seed, path_params.difficulty, path_params.mapid
-                );
-                HttpResponse::InternalServerError().body(response)
-            }
+    //     HttpResponse::build(StatusCode::OK)
+    //         .content_type("image/png")
+    //         .body(image_content)
+    // } else {
+    let map_image: Option<MapImage> = generate_single(image_request);
+    match map_image {
+        Some(p) => {
+            // let response = format!("Generated {} {} {}", path_params.seed, path_params.difficulty, path_params.mapid);
+            let pngdata = p.pixmap.encode_png().unwrap();
+            
+            HttpResponse::build(StatusCode::OK)
+                .content_type("image/png")
+                .insert_header(("offsetx", p.offsetx))
+                .insert_header(("offsety", p.offsety))
+                .insert_header(("mapwidth", p.map_width))
+                .insert_header(("mapheight", p.map_height))
+                .insert_header(("originalwidth", p.image_width))
+                .insert_header(("originalheight", p.image_height))
+                .insert_header(("prerotated", p.rotated.to_string()))
+                .insert_header(("version", "0.1.2"))
+                .body(pngdata)
+        }
+        None => {
+            let response = format!(
+                "Error generating image {} {} {}",
+                path_params.seed, path_params.difficulty, path_params.mapid
+            );
+            HttpResponse::InternalServerError().body(response)
         }
     }
+    // }
 }

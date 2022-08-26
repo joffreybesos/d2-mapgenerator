@@ -1,4 +1,5 @@
-use std::{path::PathBuf};
+use std::{path::PathBuf, io::Write, fs::File, str::FromStr, collections::HashMap};
+use actix_web::http::header::{HeaderName, HeaderValue, HeaderMap, self};
 use tiny_skia::*;
 
 use crate::{data::{LevelData, Object}, cache};
@@ -23,6 +24,21 @@ pub struct MapImage {
     pub map_height: u32,
     pub scale: u32,
     pub pixmap: Pixmap
+}
+
+impl MapImage {
+    pub fn get_headers(&self) -> Vec<String> {
+        let mut headers: Vec<String> = vec![];
+        headers.push(format!("offsetx: {}", self.offsetx));
+        headers.push(format!("offsety: {}", self.offsety));
+        headers.push(format!("mapwidth: {}", self.map_width));
+        headers.push(format!("mapheight: {}", self.map_height));
+        headers.push(format!("originalwidth: {}", self.image_width));
+        headers.push(format!("originalheight: {}", self.image_height));
+        headers.push(format!("prerotated: {}", self.rotated));
+        headers.push(format!("version: {}", "0.1.2"));
+        headers
+    }
 }
 
 
@@ -66,7 +82,7 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
     let cached_image_file_name = cache::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
     pixmap.save_png(cached_image_file_name.as_path()).unwrap();
     println!("Saved to {}", cached_image_file_name.to_string_lossy());
-    MapImage {
+    let map_image = MapImage {
         offsetx: level_data.offset.x,
         offsety: level_data.offset.y,
         image_width: width as u32,
@@ -76,7 +92,13 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
         map_height: level_data.size.height,
         scale,
         pixmap
-    }
+    };
+    let cached_headers_file_name = cache::cached_header_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
+    let headers = map_image.get_headers();
+    let mut file = File::create(cached_headers_file_name).unwrap();
+    file.write_all(headers.join("\n").as_bytes()).expect("Error writing header file");
+    map_image
+    
 }
 
 fn draw_waypoints(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) {
