@@ -28,7 +28,7 @@ async fn main() -> std::io::Result<()> {
         Some("server") => {
             let server_args = matches.subcommand_matches("server").unwrap();
             let port = *server_args.get_one::<u16>("port").unwrap();
-            println!("Running server on 127.0.0.1:{}", port);
+            println!("{}{}", "Started rust map server on http://localhost:".blue(), port.to_string().blue());
             HttpServer::new(|| {
                 App::new().service(get_map_image)
             })

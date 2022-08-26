@@ -25,11 +25,3 @@ pub fn read_cached_file(file_name: &PathBuf) -> String {
     fs::read_to_string(file_name)
         .expect("Unable to read map data file")
 }
-
-pub async fn read_cached_image(file_name: &PathBuf) {
-    println!("Reading image from cache {}", file_name.to_string_lossy());
-    web::block(|| std::fs::read(file_name))
-        .await
-        .unwrap()
-        .unwrap();
-}

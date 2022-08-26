@@ -70,15 +70,6 @@ pub async fn get_map_image(
 
     let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale };
 
-    
-    // let cached_image_file_name = cache::cached_image_file_name(&seed, &difficulty, &mapid);
-    // if Path::new(&cached_image_file_name).exists() {
-    //     let image_content = cache::read_cached_image(&cached_image_file_name).await;
-
-    //     HttpResponse::build(StatusCode::OK)
-    //         .content_type("image/png")
-    //         .body(image_content)
-    // } else {
     let map_image: Option<MapImage> = generate_single(image_request);
     match map_image {
         Some(p) => {
@@ -105,5 +96,4 @@ pub async fn get_map_image(
             HttpResponse::InternalServerError().body(response)
         }
     }
-    // }
 }
