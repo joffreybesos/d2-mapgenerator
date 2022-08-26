@@ -1,12 +1,10 @@
-use std::{str::FromStr, path::Path};
-
-use actix_web::{get, http::{StatusCode, header::{HeaderName, HeaderValue}}, web, HttpResponse, Responder};
+use actix_web::{get, http::{StatusCode}, web, HttpResponse, Responder};
 use colored::Colorize;
 use serde::Deserialize;
 
 use crate::{
     generate_single,
-    image::{ImageRequest, MapImage}, cache,
+    image::{ImageRequest, MapImage},
 };
 
 #[derive(Debug, Deserialize)]

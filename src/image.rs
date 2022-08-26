@@ -1,5 +1,4 @@
-use std::{path::PathBuf, io::Write, fs::File, str::FromStr, collections::HashMap};
-use actix_web::http::header::{HeaderName, HeaderValue, HeaderMap, self};
+use std::{path::PathBuf, io::Write, fs::File};
 use tiny_skia::*;
 
 use crate::{data::{LevelData, Object}, cache};
@@ -23,11 +22,14 @@ pub struct MapImage {
     pub map_width: u32,
     pub map_height: u32,
     pub scale: u32,
+    pub waypoints: String,
+    pub exits: String,
+    pub bosses: String,
     pub pixmap: Pixmap
 }
 
 impl MapImage {
-    pub fn get_headers(&self) -> Vec<String> {
+    pub fn get_headers(&self) -> String {
         let mut headers: Vec<String> = vec![];
         headers.push(format!("offsetx: {}", self.offsetx));
         headers.push(format!("offsety: {}", self.offsety));
@@ -36,8 +38,12 @@ impl MapImage {
         headers.push(format!("originalwidth: {}", self.image_width));
         headers.push(format!("originalheight: {}", self.image_height));
         headers.push(format!("prerotated: {}", self.rotated));
+        headers.push(format!("scale: {}", self.scale));
+        headers.push(format!("waypoints: {}", self.waypoints));
+        headers.push(format!("exits: {}", self.exits));
+        headers.push(format!("bosses: {}", self.bosses));
         headers.push(format!("version: {}", "0.1.2"));
-        headers
+        headers.join("\n")
     }
 }
 
@@ -74,10 +80,10 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
             }
         }
     }
-    draw_waypoints(&mut pixmap, &level_data, transform);
-    draw_exits(&mut pixmap, &level_data, transform);
-    draw_npcs(&mut pixmap, &level_data, transform);
-
+    let waypoint_header = draw_waypoints(&mut pixmap, &level_data, transform);
+    let exit_header = draw_exits(&mut pixmap, &level_data, transform);
+    let npc_header = draw_npcs(&mut pixmap, &level_data, transform);
+    println!("{} {} {}", waypoint_header, exit_header, npc_header);
     // save to disk
     let cached_image_file_name = cache::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
     pixmap.save_png(cached_image_file_name.as_path()).unwrap();
@@ -90,18 +96,21 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
         rotated: image_request.rotate,
         map_width: level_data.size.width,
         map_height: level_data.size.height,
+        waypoints: waypoint_header,
+        exits: exit_header,
+        bosses: npc_header,
         scale,
         pixmap
     };
     let cached_headers_file_name = cache::cached_header_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
     let headers = map_image.get_headers();
     let mut file = File::create(cached_headers_file_name).unwrap();
-    file.write_all(headers.join("\n").as_bytes()).expect("Error writing header file");
+    file.write_all(headers.as_bytes()).expect("Error writing header file");
     map_image
     
 }
 
-fn draw_waypoints(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) {
+fn draw_waypoints(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> String {
     let mut yellow = Paint::default();
     yellow.set_color_rgba8(255, 255, 0, 255);
     for object in &level_data.objects {
@@ -112,16 +121,18 @@ fn draw_waypoints(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transf
             let y = (object.y as f32) - (box_height / 2.);
             let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
             pixmap.fill_rect(rect, &yellow, transform, None);
+            return format!("{},{}", object.x, object.y)
         }
     }
+    String::new()
 }
 
-fn draw_exits(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) {
+fn draw_exits(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> String {
     let mut purple = Paint::default();
     purple.set_color_rgba8(255, 0, 255, 255);
     let mut green = Paint::default();
     green.set_color_rgba8(0, 255, 0, 255);
-
+    let mut exit_header: Vec<String> = vec![];
     for object in &level_data.objects {
         if object.object_type == "exit" {
             let box_width = 12.;
@@ -131,36 +142,43 @@ fn draw_exits(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform)
             if object.is_good_exit == true && level_data.id == 46 {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
                 pixmap.fill_rect(rect, &green, transform, None);
+                exit_header.push(format!("{},{},{},{}", level_data.id, level_data.get_level_name(), object.x, object.y));
             } else {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
                 pixmap.fill_rect(rect, &purple, transform, None);
+                exit_header.push(format!("{},{},{},{}", level_data.id, level_data.get_level_name(), object.x, object.y));
             }
         }
     }
+    exit_header.join("|")
 }
 
-fn draw_npcs(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) {
+fn draw_npcs(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> String {
     let mut red = Paint::default();
     red.set_color_rgba8(255, 0, 0, 255);
 
     let box_size = 8.;
-
+    let mut boss_header: Vec<String> = vec![];
     for object in &level_data.objects {
         // summoner
         if level_data.id == 74 && object.id == 250 {
             draw_dot(pixmap, object, box_size, transform, &red);
+            boss_header.push(format!("Summoner,{},{}", object.x, object.y));
         }
         // izual
         if level_data.id == 105 && object.object_type == "npc"  {
             draw_dot(pixmap, object, box_size, transform, &red);
+            boss_header.push(format!("Izual,{},{}", object.x, object.y));
         }
         // maggot lair 3
         if level_data.id == 64 && object.object_type == "npc"  {
             draw_dot(pixmap, object, box_size, transform, &red);
+            boss_header.push(format!("Maggot King,{},{}", object.x, object.y));
         }
         // radament
         if level_data.id == 49 && object.id == 744 {
             draw_dot(pixmap, object, box_size, transform, &red);
+            boss_header.push(format!("Radament,{},{}", object.x, object.y));
         }
         // nihlithak is calculated by the preset NPC on the _opposite_ side of the map
         if level_data.id == 124 && object.object_type == "npc" {
@@ -187,8 +205,10 @@ fn draw_npcs(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) 
             
             let rect = Rect::from_xywh(nihl_x, nihl_y, box_size as f32, box_size as f32).unwrap();
             pixmap.fill_rect(rect, &red, transform, None);
+            boss_header.push(format!("Nihlithak,{},{}", object.x, object.y));
         }
     }
+    boss_header.join("|")
 }
 
 fn draw_dot(pixmap: &mut Pixmap, object: &Object, box_size: f32, transform: Transform, red: &Paint) {

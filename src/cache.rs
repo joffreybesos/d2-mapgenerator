@@ -1,8 +1,5 @@
 use std::{env, path::{PathBuf}, fs};
 
-use actix_web::web;
-
-
 pub fn cached_file_name(seed: &u32, difficulty: &u32) -> PathBuf {
     let temp_directory = env::temp_dir();
     let cached_seed_data_file_name = format!("{}_{}.json", seed, difficulty);
