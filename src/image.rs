@@ -25,6 +25,9 @@ pub struct MapImage {
     pub waypoints: String,
     pub exits: String,
     pub bosses: String,
+    pub super_chests: String,
+    pub shrines: String,
+    pub wells: String,
     pub pixmap: Pixmap
 }
 
@@ -42,6 +45,9 @@ impl MapImage {
         headers.push(format!("waypoints: {}", self.waypoints));
         headers.push(format!("exits: {}", self.exits));
         headers.push(format!("bosses: {}", self.bosses));
+        headers.push(format!("super_chests: {}", self.super_chests));
+        headers.push(format!("shrines: {}", self.shrines));
+        headers.push(format!("wells: {}", self.wells));
         headers.push(format!("version: {}", "0.1.2"));
         headers.join("\n")
     }
@@ -80,10 +86,13 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
             }
         }
     }
-    let waypoint_header = draw_waypoints(&mut pixmap, &level_data, transform);
-    let exit_header = draw_exits(&mut pixmap, &level_data, transform);
-    let npc_header = draw_npcs(&mut pixmap, &level_data, transform);
-    println!("{} {} {}", waypoint_header, exit_header, npc_header);
+
+    let waypoints = draw_waypoints(&mut pixmap, &level_data, transform);
+    let exits = draw_exits(&mut pixmap, &level_data, transform);
+    let bosses = draw_npcs(&mut pixmap, &level_data, transform);
+    let (super_chests, shrines, wells) = draw_objects(&mut pixmap, &level_data, transform);
+    
+
     // save to disk
     let cached_image_file_name = cache::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
     pixmap.save_png(cached_image_file_name.as_path()).unwrap();
@@ -96,9 +105,12 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
         rotated: image_request.rotate,
         map_width: level_data.size.width,
         map_height: level_data.size.height,
-        waypoints: waypoint_header,
-        exits: exit_header,
-        bosses: npc_header,
+        waypoints,
+        exits,
+        bosses,
+        super_chests,
+        shrines,
+        wells,
         scale,
         pixmap
     };
@@ -110,13 +122,55 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
     
 }
 
+
+fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> (String, String, String) {
+    let mut blue = Paint::default();
+    blue.set_color_rgba8(0, 0, 255, 255);
+    let mut super_chests: Vec<String> = vec![];
+    let mut shrines: Vec<String> = vec![];
+    let mut well: Vec<String> = vec![];
+    let box_width = 12.;
+    let box_height = 12.;
+    for object in &level_data.objects {
+        if object.name == "chest" {
+            let x = (object.x as f32) - (box_width / 2.);
+            let y = (object.y as f32) - (box_height / 2.);
+            if level_data.id == 84 || level_data.id == 85 || level_data.id == 91 {
+                let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
+                pixmap.fill_rect(rect, &blue, transform, None);
+                super_chests.push(format!("{},{}", object.x, object.y));
+            }
+            if object.id == 580 || object.id == 581 {
+                let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
+                pixmap.fill_rect(rect, &blue, transform, None);
+                super_chests.push(format!("{},{}", object.x, object.y));
+            }
+        }
+        if object.name == "Shrine" {
+            let x = (object.x as f32) - (box_width / 2.);
+            let y = (object.y as f32) - (box_height / 2.);
+            let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
+            pixmap.fill_rect(rect, &blue, transform, None);
+            shrines.push(format!("{},{}", object.x, object.y));
+        }
+        if object.name == "Well" {
+            let x = (object.x as f32) - (box_width / 2.);
+            let y = (object.y as f32) - (box_height / 2.);
+            let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
+            pixmap.fill_rect(rect, &blue, transform, None);
+            well.push(format!("{},{}", object.x, object.y));
+        }
+    }
+    (super_chests.join("|"), shrines.join("|"), well.join("|"))
+}
+
 fn draw_waypoints(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> String {
     let mut yellow = Paint::default();
     yellow.set_color_rgba8(255, 255, 0, 255);
+    let box_width = 12.;
+    let box_height = 12.;
     for object in &level_data.objects {
         if object.name == "Waypoint" {
-            let box_width = 12.;
-            let box_height = 12.;
             let x = (object.x as f32) - (box_width / 2.);
             let y = (object.y as f32) - (box_height / 2.);
             let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
@@ -133,10 +187,10 @@ fn draw_exits(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform)
     let mut green = Paint::default();
     green.set_color_rgba8(0, 255, 0, 255);
     let mut exit_header: Vec<String> = vec![];
+    let box_width = 12.;
+    let box_height = 12.;
     for object in &level_data.objects {
         if object.object_type == "exit" {
-            let box_width = 12.;
-            let box_height = 12.;
             let x = (object.x as f32) - (box_width / 2.);
             let y = (object.y as f32) - (box_height / 2.);
             if object.is_good_exit == true && level_data.id == 46 {
