@@ -14,6 +14,7 @@ mod blacha;
 mod image;
 mod mapdata;
 mod server;
+mod walkableexits;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -75,8 +76,15 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
 
 pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
     let start = Instant::now();
-    let seed_data_json: SeedData = blacha::get_seed_data(&image_request.seed, &image_request.difficulty, &image_request.d2lod, &image_request.blachaexe);
+    let mut seed_data_json: SeedData = blacha::get_seed_data(&image_request.seed, &image_request.difficulty, &image_request.d2lod, &image_request.blachaexe);
+    walkableexits::get_walkable_exits(&mut seed_data_json);
 
+    for obj in seed_data_json.levels.iter().find(|l| l.id == 27).unwrap().objects.iter() {
+        if obj.id == 0 {
+            println!("{} {} {}", obj.id, obj.x, obj.y);
+        }
+    }
+    
     // generate levels in parallel
     if let Some(level_data) = seed_data_json.levels.iter().find(|a| a.id == image_request.mapid) {
         
@@ -102,7 +110,8 @@ pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
 
 pub fn generate_all(image_request: ImageRequest) {
     let start = Instant::now();
-    let seed_data_json: SeedData = blacha::get_seed_data(&image_request.seed, &image_request.difficulty, &image_request.d2lod, &image_request.blachaexe);
+    let mut seed_data_json: SeedData = blacha::get_seed_data(&image_request.seed, &image_request.difficulty, &image_request.d2lod, &image_request.blachaexe);
+    walkableexits::get_walkable_exits(&mut seed_data_json);
 
     // generate levels in parallel
     seed_data_json.levels.par_iter().for_each(|level_data| {
