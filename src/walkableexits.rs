@@ -9,6 +9,7 @@ pub fn get_walkable_exits(seed_data_json: &mut SeedData) {
             level_data.objects.append(&mut exits);
         }
     }
+
 }
 
 fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
@@ -19,17 +20,18 @@ fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
         let exit1 = level_data.map[1][1];
         if exit1 > 2 && exit1 < 100 {
             let x = level_data.map[1][0] + (level_data.map[1][1] / 2) as u64;
-            let y = 1;
-            println!("Level {} width {} Exit {}", level_data.id, exit1, x);
+            let y = 0;
             exits.push(new_exit(x as u32, y));
-            if level_data.map[1].len() > 3 {
-                let exit2 = level_data.map[1][3];
-                if exit2 > 2 && exit2 < 50 {
-                    let x = level_data.map[1][0] + level_data.map[1][1] + level_data.map[1][2] + (level_data.map[1][3] / 2) as u64;
-                    let y = 1;
-                    exits.push(new_exit(x as u32, y));
-                }
-            }
+            println!("{} t len1 {} x{} y{}", level_data.id, exit1, x, y);
+        }
+    }
+    if level_data.map[1].len() > 3 {
+        let exit2 = level_data.map[1][3];
+        if exit2 > 2 && exit2 < 50 {
+            let x = level_data.map[1][0] + level_data.map[1][1] + level_data.map[1][2] + (level_data.map[1][3] / 2) as u64;
+            let y = 0;
+            exits.push(new_exit(x as u32, y));
+            println!("{} t len2 {} x{} y{}", level_data.id, exit2, x, y);
         }
     }
 
@@ -40,16 +42,23 @@ fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
             let x = level_data.map[level_data.map.len() - 1][0] + (level_data.map[level_data.map.len() - 1][1] / 2);
             let y = level_data.size.height;
             exits.push(new_exit(x as u32, y));
-            if level_data.map[level_data.map.len() - 1].len() > 3 {
-                let exit2 = level_data.map[level_data.map.len() - 1][3];
-                if exit2 > 2 && exit2 < 50 {
-                    let x = level_data.map[level_data.map.len() - 1][0] + level_data.map[level_data.map.len() - 1][1] + level_data.map[level_data.map.len() - 1][2] + (level_data.map[level_data.map.len() - 1][3] / 2);
-                    let y = level_data.size.height;
-                    exits.push(new_exit(x as u32, y));
-                }
-            }
+            println!("{} b len1 {} x{} y{}", level_data.id, exit1, x, y);
         }
     }
+    if level_data.map[level_data.map.len() - 1].len() > 3 {
+        let exit2 = level_data.map[level_data.map.len() - 1][3];
+        if exit2 > 2 && exit2 < 50 {
+            let x = level_data.map[level_data.map.len() - 1][0] + level_data.map[level_data.map.len() - 1][1] + level_data.map[level_data.map.len() - 1][2] + (level_data.map[level_data.map.len() - 1][3] / 2);
+            let y = level_data.size.height;
+            exits.push(new_exit(x as u32, y));
+            println!("{} b len2 {} x{} y{}", level_data.id, exit2, x, y);
+        }
+        // for certain act 4 levels, remove some invalid exits
+        if exit2 == 15 {
+            exits.truncate(2);
+        }
+    }
+
     // right exits
     let mut right_count = 0;
     let mut last_index = 0;
@@ -63,10 +72,10 @@ fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
             last_index = index
         } else {
             if right_count > 2 && right_count < 50 {
-                let x = level_data.size.width;
+                let x = level_data.size.width + 1;
                 let y = (last_index - (right_count as usize / 2)).try_into().unwrap();
-                println!("Level {} width {} Exit {} right", level_data.id, right_count, x);
                 exits.push(new_exit(x as u32, y));
+                println!("{} r len {} x{} y{}", level_data.id, right_count, x, y);
             }
             right_count = 0;
         }
@@ -80,10 +89,11 @@ fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
             left_count += 1;
             last_index = index
         } else {
-            if left_count > 0 && left_count < 50 {
+            if left_count > 2 && left_count < 50 {
                 let x = 0;
                 let y = (last_index - (left_count as usize / 2)).try_into().unwrap();
                 exits.push(new_exit(x as u32, y));
+                println!("{} l len {} x{} y{}", level_data.id, left_count, x, y);
             }
             left_count = 0;
         }
