@@ -19,7 +19,7 @@ fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
     if level_data.map[1].len() > 1 {
         let exit1 = level_data.map[1][1];
         if exit1 > 2 && exit1 < 100 {
-            let x = level_data.map[1][0] + (level_data.map[1][1] / 2) as u64;
+            let x = level_data.map[1][0] + (level_data.map[1][1] as f32 / 2.).round() as u64;
             let y = 0;
             exits.push(new_exit(x as u32, y));
             // println!("{} Top exit 1 {} x{} y{}", level_data.id, exit1, x, y);
@@ -28,7 +28,7 @@ fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
     if level_data.map[1].len() > 3 {
         let exit2 = level_data.map[1][3];
         if exit2 > 2 && exit2 < 50 {
-            let x = level_data.map[1][0] + level_data.map[1][1] + level_data.map[1][2] + (level_data.map[1][3] / 2) as u64;
+            let x = level_data.map[1][0] + level_data.map[1][1] + level_data.map[1][2] + (level_data.map[1][3] as f32 / 2.).round() as u64;
             let y = 0;
             exits.push(new_exit(x as u32, y));
             // println!("{} Top exit 2 {} x{} y{}", level_data.id, exit2, x, y);
@@ -39,7 +39,7 @@ fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
     if level_data.map[level_data.map.len() - 1].len() > 1 {
         let exit1 = level_data.map[level_data.map.len() - 1][1];
         if exit1 > 2 && exit1 < 50 {
-            let x = level_data.map[level_data.map.len() - 1][0] + (level_data.map[level_data.map.len() - 1][1] / 2);
+            let x = level_data.map[level_data.map.len() - 1][0] + (level_data.map[level_data.map.len() - 1][1] as f32 / 2.).round() as u64;
             let y = level_data.size.height;
             exits.push(new_exit(x as u32, y));
             // println!("{} Bottom exit 1 {} x{} y{}", level_data.id, exit1, x, y);
@@ -48,14 +48,14 @@ fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
     if level_data.map[level_data.map.len() - 1].len() > 3 {
         let exit2 = level_data.map[level_data.map.len() - 1][3];
         if exit2 > 2 && exit2 < 50 {
-            let x = level_data.map[level_data.map.len() - 1][0] + level_data.map[level_data.map.len() - 1][1] + level_data.map[level_data.map.len() - 1][2] + (level_data.map[level_data.map.len() - 1][3] / 2);
+            let x = level_data.map[level_data.map.len() - 1][0] + level_data.map[level_data.map.len() - 1][1] + level_data.map[level_data.map.len() - 1][2] + (level_data.map[level_data.map.len() - 1][3] as f32 / 2.).round() as u64;
             let y = level_data.size.height;
             exits.push(new_exit(x as u32, y));
             // println!("{} Bottom exit 2 {} x{} y{}", level_data.id, exit2, x, y);
         }
         // for certain act 4 levels, remove some invalid exits
         if exit2 == 15 {
-            exits.truncate(2);
+            exits.truncate(exits.len() - 2);
         }
     }
 
@@ -71,10 +71,10 @@ fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
             right_count += 1;
             last_index = index
         } else {
-            if right_count > 2 && right_count < 50 {
+            if right_count > 1 && right_count < 50 {
                 let x = level_data.size.width + 1;
-                let y = (last_index - (right_count as usize / 2)).try_into().unwrap();
-                exits.push(new_exit(x as u32, y));
+                let y = last_index - (right_count as f32 / 2.).round() as usize;
+                exits.push(new_exit(x as u32, y as u32));
                 // println!("{} Right exit {} x{} y{}", level_data.id, right_count, x, y);
             }
             right_count = 0;
@@ -91,8 +91,8 @@ fn get_valid_exits(level_data: &mut LevelData) -> Vec<Object> {
         } else {
             if left_count > 2 && left_count < 50 {
                 let x = 0;
-                let y = (last_index - (left_count as usize / 2)).try_into().unwrap();
-                exits.push(new_exit(x as u32, y));
+                let y = last_index - (left_count as f32 / 2.).round() as usize;
+                exits.push(new_exit(x as u32, y as u32));
                 // println!("{} Left exit {} x{} y{}", level_data.id, left_count, x, y);
             }
             left_count = 0;
@@ -120,8 +120,8 @@ fn valid_level(level_id: u32) -> bool {
     match level_id {
         2 | 3 | 4 | 5 | 6 | 7 | 17 | 27 | 28 => true,   // act 1
         41 | 42 | 43 | 44 | 45 => true,                 // act 2
-        79 | 80 | 81 | 82 => true,                      // act 3
-        104 | 105 | 106 | 107 | 108 => true,            // act 4
+        79 | 80 | 81 | 82 | 83 => true,                 // act 3
+        103 | 104 | 105 | 106 | 107 | 108 => true,      // act 4
         _ => false
     }
 }
