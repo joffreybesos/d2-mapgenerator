@@ -109,14 +109,6 @@ pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
     );
     walkableexits::get_walkable_exits(&mut seed_data_json);
 
-    for level in seed_data_json.levels.iter() {
-        for obj in level.objects.iter() {
-            if obj.object_type == "exit" {
-                println!("{} exit {} {} {}", level.id, obj.id, obj.x, obj.y);
-            }
-        }
-    }
-
     // generate levels in parallel
     if let Some(level_data) = seed_data_json
         .levels

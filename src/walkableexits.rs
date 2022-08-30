@@ -1,7 +1,9 @@
 use crate::data::{LevelData, Object, SeedData};
 
 pub fn get_walkable_exits(seed_data_json: &mut SeedData) {
-    #[warn(unused_must_use)]
+    
+    // add the map offset to each exit x and y value
+    // I hate that i have to do this
     seed_data_json.levels.iter_mut().for_each(|o| {
         o.objects.iter_mut().for_each(|e| {
             if e.object_type == "exit" {
@@ -18,6 +20,8 @@ pub fn get_walkable_exits(seed_data_json: &mut SeedData) {
             get_valid_exits(level_data, &mut exits);
         }
     }
+
+    // put new exits into the seed data
     let new_exits = exits.clone();
     for exit in new_exits.iter() {
         for level_data in seed_data_json.levels.iter_mut() {
@@ -146,6 +150,7 @@ fn valid_level(level_id: u32) -> bool {
     }
 }
 
+// who cares about enums?
 pub fn get_attached_levels(level_id: u32) -> Vec<u32> {
     match level_id {
         1 => vec![2],
