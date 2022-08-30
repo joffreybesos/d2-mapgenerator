@@ -1,11 +1,10 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SeedData {
     pub seed: u32,
     pub difficulty: u32,
-    pub levels: Vec<LevelData>
-
+    pub levels: Vec<LevelData>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -18,7 +17,6 @@ pub struct LevelData {
     pub size: Size,
     pub objects: Vec<Object>,
     pub map: Vec<Vec<u64>>,
-
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -30,7 +28,7 @@ pub struct Offset {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Size {
     pub width: u32,
-    pub height: u32
+    pub height: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -50,7 +48,7 @@ pub struct Object {
     #[serde(default)]
     pub is_good_exit: bool,
     #[serde(default)]
-    pub owned_level_id: u32
+    pub owned_level_id: u32,
 }
 
 impl Object {
@@ -61,7 +59,12 @@ impl Object {
             new_exit_id = attached_levels[0];
             // println!("1 level {} {}", owned_level_id, new_exit_id);
         }
-        let matching_exit: Vec<&Object> = exits.iter().filter(|e| (e.x as i32 - x as i32).abs() < 3 && (e.y as i32 -y as i32).abs() < 3).collect();
+
+        // if a neighbouring map has a matching exit then update the id of that exit as well
+        let matching_exit: Vec<&Object> = exits
+            .iter()
+            .filter(|e| (e.x as i32 - x as i32).abs() < 3 && (e.y as i32 - y as i32).abs() < 3)
+            .collect();
         if matching_exit.len() > 0 {
             if matching_exit[0].owned_level_id > 0 {
                 new_exit_id = matching_exit[0].owned_level_id
@@ -78,11 +81,10 @@ impl Object {
             op: 0,
             class: "".to_owned(),
             is_good_exit: false,
-            owned_level_id
+            owned_level_id,
         }
     }
 }
-
 
 pub fn get_level_name(level_id: u32) -> &'static str {
     match level_id {
@@ -222,6 +224,6 @@ pub fn get_level_name(level_id: u32) -> &'static str {
         134 => "Forgotten Sands",
         135 => "Furnace of Pain",
         136 => "Uber Tristram",
-        _ => "All"
+        _ => "All",
     }
 }

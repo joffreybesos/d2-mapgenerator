@@ -1,16 +1,16 @@
-use actix_web::{HttpServer, App};
+use actix_web::{App, HttpServer};
 use clap::ArgMatches;
 use colored::*;
 use image::ImageRequest;
 use rayon::prelude::*;
-use std::{time::Instant};
+use std::time::Instant;
 
-use crate::{data::SeedData, server::get_map_image, image::MapImage};
+use crate::{data::SeedData, image::MapImage, server::get_map_image};
 
+mod blacha;
 mod cache;
 mod cli;
 mod data;
-mod blacha;
 mod image;
 mod mapdata;
 mod server;
@@ -25,46 +25,72 @@ async fn main() -> std::io::Result<()> {
         Some("generate") => {
             let generate_args = matches.subcommand_matches("generate").unwrap();
             generate_cli(generate_args)
-        },
+        }
         Some("server") => {
             let server_args = matches.subcommand_matches("server").unwrap();
             let port = *server_args.get_one::<u16>("port").unwrap();
-            println!("{}{}", "Started rust map server on http://localhost:".blue(), port.to_string().blue());
-            HttpServer::new(|| {
-                App::new().service(get_map_image)
-            })
-            .bind(("127.0.0.1", port))?
-            .run()
-            .await
+            println!(
+                "{}{}",
+                "Started rust map server on http://localhost:".blue(),
+                port.to_string().blue()
+            );
+            HttpServer::new(|| App::new().service(get_map_image))
+                .bind(("127.0.0.1", port))?
+                .run()
+                .await
         }
         Some(_) => Ok(()),
-        None => Ok(())
+        None => Ok(()),
     }
 }
 
-
 fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
-    
     let seed = *generate_args.get_one::<u32>("seed").unwrap();
     let difficulty = *generate_args.get_one::<u32>("difficulty").unwrap();
     let mapid = *generate_args.get_one::<u32>("mapid").unwrap();
     let scale = *generate_args.get_one::<u8>("scale").unwrap();
     let rotate = generate_args.is_present("rotate");
 
-    let d2lod = generate_args.get_one::<std::path::PathBuf>("d2lod").unwrap();
+    let d2lod = generate_args
+        .get_one::<std::path::PathBuf>("d2lod")
+        .unwrap();
     if !std::path::Path::new(&d2lod).exists() {
         panic!("{} '{}'", "ERROR: Diablo 2 LoD path does not exist! Make sure you have the d2 lod 1.13c game files located in".red().bold(), &d2lod.to_string_lossy().red());
     }
 
-    let blachaexe = generate_args.get_one::<std::path::PathBuf>("blachaexe").unwrap();
+    let blachaexe = generate_args
+        .get_one::<std::path::PathBuf>("blachaexe")
+        .unwrap();
     if !std::path::Path::new(&blachaexe).exists() {
-        panic!("{} '{}'", "ERROR: d2-mapgen.exe not in configured location, you have missing files".red().bold(), &blachaexe.to_string_lossy().red());
+        panic!(
+            "{} '{}'",
+            "ERROR: d2-mapgen.exe not in configured location, you have missing files"
+                .red()
+                .bold(),
+            &blachaexe.to_string_lossy().red()
+        );
     }
-    
-    println!("{} '{}'", "Using Diablo 2 1.13c files stored in".green(), d2lod.to_string_lossy().bright_green());
-    println!("{} '{}'", "Using blacha exe found in".green(), blachaexe.to_string_lossy().bright_green());
 
-    let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale };
+    println!(
+        "{} '{}'",
+        "Using Diablo 2 1.13c files stored in".green(),
+        d2lod.to_string_lossy().bright_green()
+    );
+    println!(
+        "{} '{}'",
+        "Using blacha exe found in".green(),
+        blachaexe.to_string_lossy().bright_green()
+    );
+
+    let image_request = ImageRequest {
+        seed,
+        difficulty,
+        mapid,
+        d2lod: d2lod.to_path_buf(),
+        blachaexe: blachaexe.to_path_buf(),
+        rotate,
+        scale,
+    };
     if mapid == 0 {
         generate_all(image_request);
     } else {
@@ -73,23 +99,30 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
     Ok(())
 }
 
-
 pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
     let start = Instant::now();
-    let mut seed_data_json: SeedData = blacha::get_seed_data(&image_request.seed, &image_request.difficulty, &image_request.d2lod, &image_request.blachaexe);
+    let mut seed_data_json: SeedData = blacha::get_seed_data(
+        &image_request.seed,
+        &image_request.difficulty,
+        &image_request.d2lod,
+        &image_request.blachaexe,
+    );
     walkableexits::get_walkable_exits(&mut seed_data_json);
 
-    for level in  seed_data_json.levels.iter() {
+    for level in seed_data_json.levels.iter() {
         for obj in level.objects.iter() {
             if obj.object_type == "exit" {
                 println!("{} exit {} {} {}", level.id, obj.id, obj.x, obj.y);
             }
         }
     }
-    
+
     // generate levels in parallel
-    if let Some(level_data) = seed_data_json.levels.iter().find(|a| a.id == image_request.mapid) {
-        
+    if let Some(level_data) = seed_data_json
+        .levels
+        .iter()
+        .find(|a| a.id == image_request.mapid)
+    {
         let edge_start = Instant::now();
         let map_grid = mapdata::level_data_to_edges(&level_data);
         let edge_elapsed = edge_start.elapsed();
@@ -97,22 +130,40 @@ pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
         let image_start = Instant::now();
         let map_image: MapImage = image::generate_image(&map_grid, &level_data, &image_request);
         let image_elapsed = image_start.elapsed();
-        println!("Generated single map {}, created grid in {}ms, image in {}ms", level_data.id, edge_elapsed.as_millis(), image_elapsed.as_millis());
-        
+        println!(
+            "Generated single map {}, created grid in {}ms, image in {}ms",
+            level_data.id,
+            edge_elapsed.as_millis(),
+            image_elapsed.as_millis()
+        );
+
         let elapsed = start.elapsed();
-        println!("{} {}{}", "Finished in".green(), elapsed.as_millis().to_string().bright_green(), "ms".green());
+        println!(
+            "{} {}{}",
+            "Finished in".green(),
+            elapsed.as_millis().to_string().bright_green(),
+            "ms".green()
+        );
 
         Some(map_image)
     } else {
-        println!("{} {}", "Error generating map".red(), image_request.mapid.to_string().red());
+        println!(
+            "{} {}",
+            "Error generating map".red(),
+            image_request.mapid.to_string().red()
+        );
         None
     }
-    
 }
 
 pub fn generate_all(image_request: ImageRequest) {
     let start = Instant::now();
-    let mut seed_data_json: SeedData = blacha::get_seed_data(&image_request.seed, &image_request.difficulty, &image_request.d2lod, &image_request.blachaexe);
+    let mut seed_data_json: SeedData = blacha::get_seed_data(
+        &image_request.seed,
+        &image_request.difficulty,
+        &image_request.d2lod,
+        &image_request.blachaexe,
+    );
     walkableexits::get_walkable_exits(&mut seed_data_json);
 
     // generate levels in parallel
@@ -125,9 +176,19 @@ pub fn generate_all(image_request: ImageRequest) {
             let image_start = Instant::now();
             image::generate_image(&map_grid, &level_data, &image_request);
             let image_elapsed = image_start.elapsed();
-            println!("Generated map {}, created grid in {}ms, image in {}ms", level_data.id, edge_elapsed.as_millis(), image_elapsed.as_millis());
+            println!(
+                "Generated map {}, created grid in {}ms, image in {}ms",
+                level_data.id,
+                edge_elapsed.as_millis(),
+                image_elapsed.as_millis()
+            );
         }
     });
     let elapsed = start.elapsed();
-    println!("{} {}{}", "Finished in".green(), elapsed.as_millis().to_string().bright_green(), "ms".green());
+    println!(
+        "{} {}{}",
+        "Finished in".green(),
+        elapsed.as_millis().to_string().bright_green(),
+        "ms".green()
+    );
 }
