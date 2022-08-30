@@ -1,7 +1,7 @@
 use std::{path::PathBuf, io::Write, fs::File};
 use tiny_skia::*;
 
-use crate::{data::{LevelData, Object}, cache};
+use crate::{data::{LevelData, Object, get_level_name}, cache};
 
 pub struct ImageRequest {
     pub seed: u32,
@@ -196,11 +196,11 @@ fn draw_exits(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform)
             if object.is_good_exit == true && level_data.id == 46 {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
                 pixmap.fill_rect(rect, &green, transform, None);
-                exit_header.push(format!("{},{},{},{}", level_data.id, level_data.get_level_name(), object.x, object.y));
+                exit_header.push(format!("{},{},{},{}", object.id, get_level_name(object.id), object.x, object.y));
             } else {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
                 pixmap.fill_rect(rect, &purple, transform, None);
-                exit_header.push(format!("{},{},{},{}", level_data.id, level_data.get_level_name(), object.x, object.y));
+                exit_header.push(format!("{},{},{},{}", object.id, get_level_name(object.id), object.x, object.y));
             }
         }
     }
