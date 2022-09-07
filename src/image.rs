@@ -129,8 +129,8 @@ fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transfor
     let mut super_chests: Vec<String> = vec![];
     let mut shrines: Vec<String> = vec![];
     let mut well: Vec<String> = vec![];
-    let box_width = 12.;
-    let box_height = 12.;
+    let box_width = 4.;
+    let box_height = 4.;
     for object in &level_data.objects {
         if object.name == "chest" {
             let x = (object.x as f32) - (box_width / 2.);

@@ -1,7 +1,6 @@
 use crate::data::{LevelData, Object, SeedData};
 
 pub fn get_walkable_exits(seed_data_json: &mut SeedData) {
-    
     // add the map offset to each exit x and y value
     // I hate that i have to do this
     seed_data_json.levels.iter_mut().for_each(|o| {
@@ -24,15 +23,21 @@ pub fn get_walkable_exits(seed_data_json: &mut SeedData) {
     // put new exits into the seed data
     let new_exits = exits.clone();
     for exit in new_exits.iter() {
-        for level_data in seed_data_json.levels.iter_mut() {
-            if level_data.id == exit.owned_level_id {
-                let mut new_exit = exit.clone();
-                new_exit.x = new_exit.x - level_data.offset.x;
-                new_exit.y = new_exit.y - level_data.offset.y;
-                level_data.objects.push(new_exit);
+        seed_data_json.levels.iter_mut().for_each(|l| {
+            if l.id == exit.owned_level_id {
+                l.objects.push(exit.clone());
             }
-        }
+        });
     }
+
+    seed_data_json.levels.iter_mut().for_each(|o| {
+        o.objects.iter_mut().for_each(|e| {
+            if e.object_type == "exit" {
+                e.x = e.x - o.offset.x;
+                e.y = e.y - o.offset.y;
+            }
+        });
+    });
 }
 
 // detect the exit by the number of tiles at the edge of the map
