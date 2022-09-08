@@ -5,7 +5,7 @@ use colored::*;
 use serde_json::Error;
 
 use crate::cache;
-use crate::data::SeedData;
+use crate::jsondata::SeedData;
 
 pub fn get_seed_data(seed: &u32, difficulty: &u32, d2lod: &PathBuf, blachaexe: &PathBuf) -> SeedData {
     let cached_seed_data_file = cache::cached_file_name(seed, difficulty);

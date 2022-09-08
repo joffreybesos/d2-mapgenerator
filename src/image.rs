@@ -1,7 +1,7 @@
 use std::{path::PathBuf, io::Write, fs::File};
 use tiny_skia::*;
 
-use crate::{data::{LevelData, Object, get_level_name}, cache};
+use crate::{jsondata::{LevelData, Object, get_level_name}, cache};
 
 pub struct ImageRequest {
     pub seed: u32,
@@ -11,6 +11,7 @@ pub struct ImageRequest {
     pub blachaexe: PathBuf,
     pub rotate: bool,
     pub scale: u8,
+    pub path_finding: bool
 }
 
 pub struct MapImage {

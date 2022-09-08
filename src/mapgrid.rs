@@ -1,10 +1,60 @@
 use std::ops::Sub;
 
-use crate::data::LevelData;
+use pathfinding::prelude::astar;
 
-pub fn level_data_to_walkable(level_data: &LevelData) -> Vec<Vec<i32>> {
+use crate::jsondata::LevelData;
 
-    
+pub struct MapGrid {
+    tiles: Vec<Vec<i32>>,
+    width: i16,
+    height: i16
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct Pos(pub i16, pub i16);
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd)]
+pub struct Successor {
+    pub pos: Pos,
+    pub cost: u32,
+}
+
+impl MapGrid {
+    pub fn get_successors(&self, position: &Pos) -> Vec<Successor> {
+        let mut successors = Vec::new();
+        for dx in -1i16..=1 {
+            for dy in -1i16..=1 {
+                if dx == 0 && dy == 0 {
+                    continue;
+                }
+                let new_position = Pos(position.0 + dx, position.1 + dy);
+                if new_position.0 < 0 || new_position.0 >= self.width.into() || new_position.1 < 0 || new_position.1 >= self.height.into() {
+                    continue;
+                }
+                let board_value = self.tiles[new_position.1 as usize][new_position.0 as usize];
+                
+                successors.push(Successor { pos: new_position, cost: board_value as u32});
+                
+            }
+        }
+        successors
+    }
+}
+
+pub fn get_path(map_grid: &MapGrid) {
+    let start = Pos(307,140);
+    let goal = Pos(1,101);
+    let result = astar(
+        &start,
+        |p| map_grid.get_successors(p).iter().map(|s| (s.pos, s.cost)).collect::<Vec<_>>(),
+        |p| ((p.0 - goal.0).abs() + (p.1 - goal.1).abs()) as u32,
+        |p| *p==goal);
+    let result = result.expect("No path found");
+    println!("total cost: {:}", result.1);
+    dbg!(result);
+}
+
+pub fn level_data_to_walkable(level_data: &LevelData) -> MapGrid {
     let lvl_width = level_data.size.width as usize;
     let lvl_height = level_data.size.height as usize;
     
@@ -38,25 +88,22 @@ pub fn level_data_to_walkable(level_data: &LevelData) -> Vec<Vec<i32>> {
         }
         y += 1;
     }
-
-    map_grid
+    MapGrid { tiles: map_grid, width: lvl_width as i16, height: lvl_height as i16 }
     
 }
 
 
-pub fn level_data_to_edges(level_data: &LevelData) -> Vec<Vec<i32>> {
-
-    let map_grid = level_data_to_walkable(&level_data);
+pub fn level_data_to_edges(level_data: &LevelData, map_grid: &MapGrid) -> Vec<Vec<i32>> {
     
-    let lvl_width = level_data.size.width as usize;
-    let lvl_height = level_data.size.height as usize;
+    let lvl_width = map_grid.width as usize;
+    let lvl_height = map_grid.height as usize;
 
     let mut edge_map_grid: Vec<Vec<i32>> = vec![vec![0; lvl_width]; lvl_height];
 
-    for (row, row_vec) in map_grid.iter().enumerate() {
+    for (row, row_vec) in map_grid.tiles.iter().enumerate() {
         for (col, cell) in row_vec.iter().enumerate() {
             if cell == &0 {
-                let border = check_surrounding_pixels(&map_grid, row , col, lvl_width, lvl_height);
+                let border = check_surrounding_pixels(&map_grid.tiles, row , col, lvl_width, lvl_height);
                 if border {
                     edge_map_grid[row][col] = 1;
                 }

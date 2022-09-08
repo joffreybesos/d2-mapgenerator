@@ -1,4 +1,4 @@
-use crate::data::{LevelData, Object, SeedData};
+use crate::jsondata::{LevelData, Object, SeedData};
 
 pub fn get_walkable_exits(seed_data_json: &mut SeedData) {
     // add the map offset to each exit x and y value
