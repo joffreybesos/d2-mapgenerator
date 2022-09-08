@@ -2,10 +2,11 @@ use actix_web::{App, HttpServer};
 use clap::ArgMatches;
 use colored::*;
 use image::ImageRequest;
+use pathfind::Pos;
 use rayon::prelude::*;
 use std::time::Instant;
 
-use crate::{jsondata::SeedData, image::MapImage, server::get_map_image, mapgrid::{MapGrid, Pos}};
+use crate::{jsondata::SeedData, image::MapImage, server::get_map_image, mapgrid::MapGrid};
 
 mod blacha;
 mod cache;
@@ -15,7 +16,7 @@ mod image;
 mod mapgrid;
 mod server;
 mod walkableexits;
-mod pathfinding;
+mod pathfind;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -26,7 +27,7 @@ async fn main() -> std::io::Result<()> {
         Some("generate") => {
             let generate_args = matches.subcommand_matches("generate").unwrap();
             generate_cli(generate_args)
-        }
+        },
         Some("server") => {
             let server_args = matches.subcommand_matches("server").unwrap();
             let port = *server_args.get_one::<u16>("port").unwrap();
@@ -51,6 +52,7 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
     let mapid = *generate_args.get_one::<u32>("mapid").unwrap();
     let scale = *generate_args.get_one::<u8>("scale").unwrap();
     let rotate = generate_args.is_present("rotate");
+    let pathonly = generate_args.is_present("pathonly");
 
     let path_start = generate_args.get_one::<String>("pathstart").unwrap().clone();
     let path_end = generate_args.get_one::<String>("pathend").unwrap().clone();
@@ -99,10 +101,49 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
     };
     if mapid == 0 {
         generate_all(image_request);
+    } else if pathonly {
+        generate_pathonly(image_request);
     } else {
         generate_single(image_request);
     }
     Ok(())
+}
+
+pub fn generate_pathonly(image_request: ImageRequest) {
+    let start = Instant::now();
+    let mut seed_data_json: SeedData = blacha::get_seed_data(
+        &image_request.seed,
+        &image_request.difficulty,
+        &image_request.d2lod,
+        &image_request.blachaexe,
+    );
+    walkableexits::get_walkable_exits(&mut seed_data_json);
+
+    // generate levels in parallel
+    if let Some(level_data) = seed_data_json
+        .levels
+        .iter()
+        .find(|a| a.id == image_request.mapid)
+    {
+        let map_grid: MapGrid = mapgrid::level_data_to_walkable(&level_data);
+        let path_data: Vec<Pos> = pathfind::get_path_data(&level_data, &map_grid, &image_request.path_start, &image_request.path_end);
+        let path = serde_json::to_string(&path_data);
+        match path {
+            Ok(path) => println!("{}", path),
+            Err(_) => println!("ERROR"),
+        }
+        // path_data.iter().for_each(|pos| {
+        //     pos.
+        //     println!("[{}, {}]", pos.0, pos.1);
+        // });
+
+    } else {
+        println!(
+            "{} {}",
+            "Error generating path data".red(),
+            image_request.mapid.to_string().red()
+        );
+    }
 }
 
 pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
@@ -123,7 +164,7 @@ pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
     {
         let edge_start = Instant::now();
         let map_grid: MapGrid = mapgrid::level_data_to_walkable(&level_data);
-        let path_data: Vec<Pos> = pathfinding::get_path_data(&level_data, &map_grid, &image_request.path_start, &image_request.path_end);
+        let path_data: Vec<Pos> = pathfind::get_path_data(&level_data, &map_grid, &image_request.path_start, &image_request.path_end);
         let edge_grid = mapgrid::level_data_to_edges(&map_grid);
         let edge_elapsed = edge_start.elapsed();
 

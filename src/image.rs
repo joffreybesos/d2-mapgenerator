@@ -1,7 +1,7 @@
 use std::{path::PathBuf, io::Write, fs::File};
 use tiny_skia::*;
 
-use crate::{jsondata::{LevelData, Object, get_level_name}, cache, mapgrid::Pos};
+use crate::{jsondata::{LevelData, Object, get_level_name}, cache, pathfind::Pos};
 
 pub struct ImageRequest {
     pub seed: u32,
@@ -126,8 +126,6 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
 }
 
 fn draw_pathfinding(pixmap: &mut Pixmap, path_data: Vec<Pos>, transform: Transform) {
-    
-
     let mut pb = PathBuilder::new();
     pb.move_to(path_data[0].0 as f32, path_data[0].1 as f32);
     path_data.iter().for_each(|p| {
@@ -142,13 +140,7 @@ fn draw_pathfinding(pixmap: &mut Pixmap, path_data: Vec<Pos>, transform: Transfo
     stroke.width = 1.0;
 
     pixmap.stroke_path(&path, &red, &stroke, transform, None);
-    
-    // path_data.iter()
-    // .zip(path_data.iter().skip(1))
-    // .for_each(|(pos1, pos2)| {
-    //     let rect = Rect::from_xywh(pos1.0 as f32, pos1.1 as f32, 1., 1.).unwrap();
-    //     pixmap.fill_rect(rect, &red, transform, None);
-    // });
+
 }
 
 fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> (String, String, String) {

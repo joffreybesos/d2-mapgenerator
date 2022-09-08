@@ -1,7 +1,11 @@
 use pathfinding::prelude::astar;
+use serde::Serialize;
 
-use crate::{mapgrid::{MapGrid, Pos}, jsondata::{LevelData}};
 
+use crate::{mapgrid::{MapGrid}, jsondata::{LevelData}};
+
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+pub struct Pos(pub i16, pub i16);
 
 pub fn get_path_data(level_data: &LevelData, map_grid: &MapGrid, path_start: &String, path_end: &String) -> Vec<Pos> {
     let start_pos = get_pos(&level_data, path_start);

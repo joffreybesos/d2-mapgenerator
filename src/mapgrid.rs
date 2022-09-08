@@ -1,15 +1,12 @@
 use std::ops::Sub;
 
-use crate::jsondata::LevelData;
+use crate::{jsondata::LevelData, pathfind::Pos};
 
 pub struct MapGrid {
     tiles: Vec<Vec<i32>>,
     width: i16,
     height: i16
 }
-
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Pos(pub i16, pub i16);
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd)]
 pub struct Successor {
