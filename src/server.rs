@@ -65,8 +65,9 @@ pub async fn get_map_image(
     if !std::path::Path::new(&blachaexe).exists() {
         panic!("{} '{}'", "ERROR: d2-mapgen.exe not in configured location, you have missing files".red().bold(), blachaexe.to_string_lossy().red());
     }
-    let path_finding = true;
-    let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale, path_finding};
+    let path_start = String::from("0");
+    let path_end = String::from("0");
+    let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale, path_start, path_end};
 
     let map_image: Option<MapImage> = generate_single(image_request);
     match map_image {

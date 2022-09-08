@@ -1,7 +1,5 @@
 use std::ops::Sub;
 
-use pathfinding::prelude::astar;
-
 use crate::jsondata::LevelData;
 
 pub struct MapGrid {
@@ -32,8 +30,9 @@ impl MapGrid {
                     continue;
                 }
                 let board_value = self.tiles[new_position.1 as usize][new_position.0 as usize];
-                
-                successors.push(Successor { pos: new_position, cost: board_value as u32});
+                if board_value > 0 {
+                    successors.push(Successor { pos: new_position, cost: board_value as u32});
+                }
                 
             }
         }
@@ -41,18 +40,6 @@ impl MapGrid {
     }
 }
 
-pub fn get_path(map_grid: &MapGrid) {
-    let start = Pos(307,140);
-    let goal = Pos(1,101);
-    let result = astar(
-        &start,
-        |p| map_grid.get_successors(p).iter().map(|s| (s.pos, s.cost)).collect::<Vec<_>>(),
-        |p| ((p.0 - goal.0).abs() + (p.1 - goal.1).abs()) as u32,
-        |p| *p==goal);
-    let result = result.expect("No path found");
-    println!("total cost: {:}", result.1);
-    dbg!(result);
-}
 
 pub fn level_data_to_walkable(level_data: &LevelData) -> MapGrid {
     let lvl_width = level_data.size.width as usize;
@@ -93,7 +80,7 @@ pub fn level_data_to_walkable(level_data: &LevelData) -> MapGrid {
 }
 
 
-pub fn level_data_to_edges(level_data: &LevelData, map_grid: &MapGrid) -> Vec<Vec<i32>> {
+pub fn level_data_to_edges(map_grid: &MapGrid) -> Vec<Vec<i32>> {
     
     let lvl_width = map_grid.width as usize;
     let lvl_height = map_grid.height as usize;

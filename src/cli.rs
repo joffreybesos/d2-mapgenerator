@@ -41,6 +41,20 @@ pub fn command_line_interface() -> ArgMatches {
                     .value_parser(value_parser!(u32).range(0..=136))
             )
             .arg(
+                Arg::new("pathstart")
+                    .long("pathstart")
+                    .help("Draw a path using pathfinding, start with this location")
+                    .takes_value(true)
+                    .default_value("0")
+            )
+            .arg(
+                Arg::new("pathend")
+                    .long("pathend")
+                    .help("End with this location (e.g. '102' for exit 102, or '5424,5246' for world location")
+                    .takes_value(true)
+                    .default_value("0")
+            )
+            .arg(
                 Arg::new("d2lod")
                     .long("d2lod")
                     .short('l')

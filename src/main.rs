@@ -5,7 +5,7 @@ use image::ImageRequest;
 use rayon::prelude::*;
 use std::time::Instant;
 
-use crate::{jsondata::SeedData, image::MapImage, server::get_map_image, mapgrid::MapGrid};
+use crate::{jsondata::SeedData, image::MapImage, server::get_map_image, mapgrid::{MapGrid, Pos}};
 
 mod blacha;
 mod cache;
@@ -15,6 +15,7 @@ mod image;
 mod mapgrid;
 mod server;
 mod walkableexits;
+mod pathfinding;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -51,6 +52,9 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
     let scale = *generate_args.get_one::<u8>("scale").unwrap();
     let rotate = generate_args.is_present("rotate");
 
+    let path_start = generate_args.get_one::<String>("pathstart").unwrap().clone();
+    let path_end = generate_args.get_one::<String>("pathend").unwrap().clone();
+
     let d2lod = generate_args
         .get_one::<std::path::PathBuf>("d2lod")
         .unwrap();
@@ -81,7 +85,6 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
         "Using blacha exe found in".green(),
         blachaexe.to_string_lossy().bright_green()
     );
-    let path_finding = true;
 
     let image_request = ImageRequest {
         seed,
@@ -91,7 +94,8 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
         blachaexe: blachaexe.to_path_buf(),
         rotate,
         scale,
-        path_finding
+        path_start,
+        path_end
     };
     if mapid == 0 {
         generate_all(image_request);
@@ -119,11 +123,12 @@ pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
     {
         let edge_start = Instant::now();
         let map_grid: MapGrid = mapgrid::level_data_to_walkable(&level_data);
-        let edge_grid = mapgrid::level_data_to_edges(&level_data, &map_grid);
+        let path_data: Vec<Pos> = pathfinding::get_path_data(&level_data, &map_grid, &image_request.path_start, &image_request.path_end);
+        let edge_grid = mapgrid::level_data_to_edges(&map_grid);
         let edge_elapsed = edge_start.elapsed();
 
         let image_start = Instant::now();
-        let map_image: MapImage = image::generate_image(&edge_grid, &level_data, &image_request);
+        let map_image: MapImage = image::generate_image(&edge_grid, &level_data, &image_request, path_data);
         let image_elapsed = image_start.elapsed();
         println!(
             "Generated single map {}, created grid in {}ms, image in {}ms",
@@ -166,11 +171,12 @@ pub fn generate_all(image_request: ImageRequest) {
         if level_data.id == image_request.mapid || image_request.mapid == 0 {
             let edge_start = Instant::now();
             let map_grid: MapGrid = mapgrid::level_data_to_walkable(&level_data);
-            let edge_grid = mapgrid::level_data_to_edges(&level_data, &map_grid);
+            let edge_grid = mapgrid::level_data_to_edges(&map_grid);
             let edge_elapsed = edge_start.elapsed();
 
             let image_start = Instant::now();
-            image::generate_image(&edge_grid, &level_data, &image_request);
+            let path_data = vec![];  // no pathing for 'all' maps
+            image::generate_image(&edge_grid, &level_data, &image_request, path_data);
             let image_elapsed = image_start.elapsed();
             println!(
                 "Generated map {}, created grid in {}ms, image in {}ms",

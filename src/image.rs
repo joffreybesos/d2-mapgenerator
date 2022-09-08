@@ -1,7 +1,7 @@
 use std::{path::PathBuf, io::Write, fs::File};
 use tiny_skia::*;
 
-use crate::{jsondata::{LevelData, Object, get_level_name}, cache};
+use crate::{jsondata::{LevelData, Object, get_level_name}, cache, mapgrid::Pos};
 
 pub struct ImageRequest {
     pub seed: u32,
@@ -11,7 +11,8 @@ pub struct ImageRequest {
     pub blachaexe: PathBuf,
     pub rotate: bool,
     pub scale: u8,
-    pub path_finding: bool
+    pub path_start: String,
+    pub path_end: String,
 }
 
 pub struct MapImage {
@@ -55,7 +56,7 @@ impl MapImage {
 }
 
 
-pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_request: &ImageRequest) -> MapImage {
+pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_request: &ImageRequest, path_data: Vec<Pos>) -> MapImage {
     let mut height = map_grid.len() as f64;
     let mut width = map_grid[0].len() as f64;
     let scale = image_request.scale as u32;
@@ -87,7 +88,8 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
             }
         }
     }
-
+    draw_pathfinding(&mut pixmap, path_data, transform);
+    
     let waypoints = draw_waypoints(&mut pixmap, &level_data, transform);
     let exits = draw_exits(&mut pixmap, &level_data, transform);
     let bosses = draw_npcs(&mut pixmap, &level_data, transform);
@@ -123,6 +125,14 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
     
 }
 
+fn draw_pathfinding(pixmap: &mut Pixmap, path_data: Vec<Pos>, transform: Transform) {
+    let mut red = Paint::default();
+    red.set_color_rgba8(255, 0, 0, 255);
+    path_data.iter().for_each(|pos| {
+        let rect = Rect::from_xywh(pos.0 as f32, pos.1 as f32, 1., 1.).unwrap();
+        pixmap.fill_rect(rect, &red, transform, None);
+    });
+}
 
 fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> (String, String, String) {
     let mut blue = Paint::default();
@@ -138,12 +148,12 @@ fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transfor
             let y = (object.y as f32) - (box_height / 2.);
             if level_data.id == 84 || level_data.id == 85 || level_data.id == 91 {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
-                pixmap.fill_rect(rect, &blue, transform, None);
+                // pixmap.fill_rect(rect, &blue, transform, None);
                 super_chests.push(format!("{},{}", object.x, object.y));
             }
             if object.id == 580 || object.id == 581 {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
-                pixmap.fill_rect(rect, &blue, transform, None);
+                // pixmap.fill_rect(rect, &blue, transform, None);
                 super_chests.push(format!("{},{}", object.x, object.y));
             }
         }
@@ -151,14 +161,14 @@ fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transfor
             let x = (object.x as f32) - (box_width / 2.);
             let y = (object.y as f32) - (box_height / 2.);
             let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
-            pixmap.fill_rect(rect, &blue, transform, None);
+            // pixmap.fill_rect(rect, &blue, transform, None);
             shrines.push(format!("{},{}", object.x, object.y));
         }
         if object.name == "Well" {
             let x = (object.x as f32) - (box_width / 2.);
             let y = (object.y as f32) - (box_height / 2.);
             let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
-            pixmap.fill_rect(rect, &blue, transform, None);
+            // pixmap.fill_rect(rect, &blue, transform, None);
             well.push(format!("{},{}", object.x, object.y));
         }
     }
