@@ -126,12 +126,29 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
 }
 
 fn draw_pathfinding(pixmap: &mut Pixmap, path_data: Vec<Pos>, transform: Transform) {
+    
+
+    let mut pb = PathBuilder::new();
+    pb.move_to(path_data[0].0 as f32, path_data[0].1 as f32);
+    path_data.iter().for_each(|p| {
+        pb.line_to(p.0 as f32, p.1 as f32);
+    });
+    let path = pb.finish().unwrap();
+
     let mut red = Paint::default();
     red.set_color_rgba8(255, 0, 0, 255);
-    path_data.iter().for_each(|pos| {
-        let rect = Rect::from_xywh(pos.0 as f32, pos.1 as f32, 1., 1.).unwrap();
-        pixmap.fill_rect(rect, &red, transform, None);
-    });
+
+    let mut stroke = Stroke::default();
+    stroke.width = 1.0;
+
+    pixmap.stroke_path(&path, &red, &stroke, transform, None);
+    
+    // path_data.iter()
+    // .zip(path_data.iter().skip(1))
+    // .for_each(|(pos1, pos2)| {
+    //     let rect = Rect::from_xywh(pos1.0 as f32, pos1.1 as f32, 1., 1.).unwrap();
+    //     pixmap.fill_rect(rect, &red, transform, None);
+    // });
 }
 
 fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> (String, String, String) {
