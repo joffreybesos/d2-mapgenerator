@@ -136,24 +136,24 @@ fn draw_pathfinding(pixmap: &mut Pixmap, path_data: Vec<Pos>, transform: Transfo
 
 fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> (String, String, String) {
     let mut blue = Paint::default();
-    blue.set_color_rgba8(0, 0, 255, 255);
+    blue.set_color_rgba8(0, 0, 255, 0);  // alpha is zero since we don't want to really show
     let mut super_chests: Vec<String> = vec![];
     let mut shrines: Vec<String> = vec![];
     let mut well: Vec<String> = vec![];
-    let box_width = 4.;
-    let box_height = 4.;
+    let box_width = 1.;
+    let box_height = 1.;
     for object in &level_data.objects {
         if object.name == "chest" {
             let x = (object.x as f32) - (box_width / 2.);
             let y = (object.y as f32) - (box_height / 2.);
             if level_data.id == 84 || level_data.id == 85 || level_data.id == 91 {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
-                // pixmap.fill_rect(rect, &blue, transform, None);
+                pixmap.fill_rect(rect, &blue, transform, None);
                 super_chests.push(format!("{},{}", object.x, object.y));
             }
             if object.id == 580 || object.id == 581 {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
-                // pixmap.fill_rect(rect, &blue, transform, None);
+                pixmap.fill_rect(rect, &blue, transform, None);
                 super_chests.push(format!("{},{}", object.x, object.y));
             }
         }
@@ -161,14 +161,14 @@ fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transfor
             let x = (object.x as f32) - (box_width / 2.);
             let y = (object.y as f32) - (box_height / 2.);
             let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
-            // pixmap.fill_rect(rect, &blue, transform, None);
+            pixmap.fill_rect(rect, &blue, transform, None);
             shrines.push(format!("{},{}", object.x, object.y));
         }
         if object.name == "Well" {
             let x = (object.x as f32) - (box_width / 2.);
             let y = (object.y as f32) - (box_height / 2.);
             let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
-            // pixmap.fill_rect(rect, &blue, transform, None);
+            pixmap.fill_rect(rect, &blue, transform, None);
             well.push(format!("{},{}", object.x, object.y));
         }
     }
