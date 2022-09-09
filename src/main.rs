@@ -110,7 +110,7 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
 }
 
 pub fn generate_pathonly(image_request: ImageRequest) {
-    let start = Instant::now();
+    
     let mut seed_data_json: SeedData = blacha::get_seed_data(
         &image_request.seed,
         &image_request.difficulty,
@@ -132,11 +132,6 @@ pub fn generate_pathonly(image_request: ImageRequest) {
             Ok(path) => println!("{}", path),
             Err(_) => println!("ERROR"),
         }
-        // path_data.iter().for_each(|pos| {
-        //     pos.
-        //     println!("[{}, {}]", pos.0, pos.1);
-        // });
-
     } else {
         println!(
             "{} {}",

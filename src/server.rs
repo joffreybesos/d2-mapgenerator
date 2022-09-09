@@ -8,9 +8,12 @@ use crate::{
 };
 
 #[derive(Debug, Deserialize)]
+#[allow(non_snake_case)]
 pub struct Params {
     rotate: Option<bool>,
-    scale: Option<u8>,
+    serverScale: Option<u8>,
+    pathStart: Option<String>,
+    pathEnd: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -51,9 +54,17 @@ pub async fn get_map_image(
         Some(r) => r == true,
         None => false,
     };
-    let scale = match query.scale {
+    let scale = match query.serverScale {
         Some(s) => s,
-        None => 2,
+        None => 3,
+    };
+    let path_start = match &query.pathStart {
+        Some(s) => s,
+        None => "0",
+    };
+    let path_end = match &query.pathEnd {
+        Some(s) => s,
+        None => "0",
     };
 
     let d2lod = std::path::PathBuf::from("./d2lod");
@@ -65,9 +76,8 @@ pub async fn get_map_image(
     if !std::path::Path::new(&blachaexe).exists() {
         panic!("{} '{}'", "ERROR: d2-mapgen.exe not in configured location, you have missing files".red().bold(), blachaexe.to_string_lossy().red());
     }
-    let path_start = String::from("0");
-    let path_end = String::from("0");
-    let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale, path_start, path_end};
+
+    let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale, path_start: path_start.to_string(), path_end: path_end.to_string()};
 
     let map_image: Option<MapImage> = generate_single(image_request);
     match map_image {
@@ -81,9 +91,15 @@ pub async fn get_map_image(
                 .insert_header(("offsety", p.offsety))
                 .insert_header(("mapwidth", p.map_width))
                 .insert_header(("mapheight", p.map_height))
-                .insert_header(("originalwidth", p.image_width))
-                .insert_header(("originalheight", p.image_height))
+                .insert_header(("originalwidth", p.map_width * p.scale))
+                .insert_header(("originalheight", (p.map_height * p.scale) + 20))
                 .insert_header(("prerotated", p.rotated.to_string()))
+                .insert_header(("serverScale", p.scale.to_string()))
+                .insert_header(("exits", p.exits))
+                .insert_header(("bosses", p.bosses))
+                .insert_header(("super_chests", p.super_chests))
+                .insert_header(("shrines", p.shrines))
+                .insert_header(("wells", p.wells))
                 .insert_header(("version", "0.1.2"))
                 .body(pngdata)
         }

@@ -18,8 +18,6 @@ pub struct ImageRequest {
 pub struct MapImage {
     pub offsetx: u32,
     pub offsety: u32,
-    pub image_width: u32,
-    pub image_height: u32,
     pub rotated: bool,
     pub map_width: u32,
     pub map_height: u32,
@@ -40,10 +38,10 @@ impl MapImage {
         headers.push(format!("offsety: {}", self.offsety));
         headers.push(format!("mapwidth: {}", self.map_width));
         headers.push(format!("mapheight: {}", self.map_height));
-        headers.push(format!("originalwidth: {}", self.image_width));
-        headers.push(format!("originalheight: {}", self.image_height));
+        headers.push(format!("originalwidth: {}", self.map_width * self.scale));
+        headers.push(format!("originalheight: {}", (self.map_height * self.scale) + 20));
         headers.push(format!("prerotated: {}", self.rotated));
-        headers.push(format!("scale: {}", self.scale));
+        headers.push(format!("serverScale: {}", self.scale));
         headers.push(format!("waypoints: {}", self.waypoints));
         headers.push(format!("exits: {}", self.exits));
         headers.push(format!("bosses: {}", self.bosses));
@@ -57,23 +55,25 @@ impl MapImage {
 
 
 pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_request: &ImageRequest, path_data: Vec<Pos>) -> MapImage {
-    let mut height = map_grid.len() as f64;
-    let mut width = map_grid[0].len() as f64;
     let scale = image_request.scale as u32;
+    let height = (map_grid.len() as f64 * scale as f64) + 20.;
+    let width = map_grid[0].len() as f64 * scale as f64;
+    
     let mut pixmap: Pixmap;
     let transform: Transform;
     if image_request.rotate {
         // there has to be a better way, I hate this
+        println!("{} {} rotated {} {}", map_grid.len(), map_grid[0].len(), width, height);
         let angle: f64 = 45. * (std::f64::consts::PI / 180.);
         let x_translation = ((height as f64) * angle.sin()).abs();
-        width = ((width as f64) * angle.cos()).abs() + ((height as f64) * angle.sin()).abs();
-        height = ((width as f64) * angle.sin()).abs() + ((height as f64) * angle.cos()).abs();
+        let rotated_width = ((width as f64) * angle.cos()).abs() + ((height as f64) * angle.sin()).abs();
+        let rotated_height = ((width as f64) * angle.sin()).abs() + ((height as f64) * angle.cos()).abs();
         
-        // println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
-        pixmap = Pixmap::new((width as u32) * scale, (height as u32) * scale).unwrap();
-        transform = Transform::from_rotate(45.0).post_scale(scale as f32, scale as f32).post_translate((x_translation * scale as f64) as f32, 0.);
+        println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
+        pixmap = Pixmap::new(rotated_width as u32, rotated_height as u32).unwrap();
+        transform = Transform::from_rotate(45.0).post_scale(scale as f32, scale as f32).post_translate((x_translation as f64) as f32, 0.);
     } else {
-        pixmap = Pixmap::new((width as u32) * scale, (height as u32) * scale).unwrap();
+        pixmap = Pixmap::new(width as u32, height as u32).unwrap();
         transform = Transform::from_scale(scale as f32, scale as f32);
     }
     
@@ -83,7 +83,7 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
     for (y, row) in map_grid.iter().enumerate() {
         for (x, cell) in row.iter().enumerate() {
             if cell != &0 {
-                let rect = Rect::from_xywh(x as f32, y as f32, 1., 1.).unwrap();
+                let rect = Rect::from_xywh(x as f32 + 1., y as f32 + 1., 1., 1.).unwrap();
                 pixmap.fill_rect(rect, &paint, transform, None);
             }
         }
@@ -103,8 +103,6 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
     let map_image = MapImage {
         offsetx: level_data.offset.x,
         offsety: level_data.offset.y,
-        image_width: width as u32,
-        image_height: height as u32,
         rotated: image_request.rotate,
         map_width: level_data.size.width,
         map_height: level_data.size.height,
