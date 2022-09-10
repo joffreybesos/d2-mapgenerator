@@ -11,7 +11,7 @@ use crate::{
 #[allow(non_snake_case)]
 pub struct Params {
     rotate: Option<bool>,
-    serverScale: Option<u8>,
+    serverScale: Option<f32>,
     pathStart: Option<String>,
     pathEnd: Option<String>,
 }
@@ -56,7 +56,7 @@ pub async fn get_map_image(
     };
     let scale = match query.serverScale {
         Some(s) => s,
-        None => 3,
+        None => 3.0,
     };
     let path_start = match &query.pathStart {
         Some(s) => s,
@@ -67,7 +67,7 @@ pub async fn get_map_image(
         None => "0",
     };
 
-    let d2lod = std::path::PathBuf::from("./d2lod");
+    let d2lod = std::path::PathBuf::from("./game");
     if !std::path::Path::new(&d2lod).exists() {
         panic!("{} '{}'", "ERROR: Diablo 2 LoD path does not exist! Make sure you have the d2 lod 1.13c game files located in".red().bold(), &d2lod.to_string_lossy().red());
     }
@@ -91,8 +91,8 @@ pub async fn get_map_image(
                 .insert_header(("offsety", p.offsety))
                 .insert_header(("mapwidth", p.map_width))
                 .insert_header(("mapheight", p.map_height))
-                .insert_header(("originalwidth", p.map_width * p.scale))
-                .insert_header(("originalheight", (p.map_height * p.scale) + 20))
+                .insert_header(("originalwidth", (p.map_width as f32 * p.scale) as u32))
+                .insert_header(("originalheight", (p.map_height as f32 * p.scale) as u32 + 20))
                 .insert_header(("prerotated", p.rotated.to_string()))
                 .insert_header(("serverScale", p.scale.to_string()))
                 .insert_header(("exits", p.exits))

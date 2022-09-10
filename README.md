@@ -38,7 +38,7 @@ OPTIONS:
                                      ./mapgen/d2-mapgen.exe]
     -d, --difficulty <difficulty>    Game difficulty 0-2, 0 = normal, 1 = nightmare, 2 = hell
     -h, --help                       Print help information
-    -l, --d2lod <d2lod>              Diablo 2 LoD 1.13c game files (optional) [default: ./d2lod]
+    -l, --d2lod <d2lod>              Diablo 2 LoD 1.13c game files (optional) [default: ./game]
     -m, --map <mapid>                Map area 1-136, set to 0 or omit to generate for ALL maps
                                      [default: 0]
     -r, --rotate                     Rotate the image 45 degrees
@@ -56,7 +56,7 @@ OPTIONS:
     -b, --blachaexe <blachaexe>    Location of d2-mapgen.exe (optional) [default:
                                    ./mapgen/d2-mapgen.exe]
     -h, --help                     Print help information
-    -l, --d2lod <d2lod>            Diablo 2 LoD 1.13c game files (optional) [default: ./d2lod]
+    -l, --d2lod <d2lod>            Diablo 2 LoD 1.13c game files (optional) [default: ./game]
     -p, --port <port>              Port to use for server [default: 3003]
     -z, --scale <scale>            Pixel multiplier of the map image (optional) [default: 1]
 ```

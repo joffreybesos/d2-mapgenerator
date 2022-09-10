@@ -10,7 +10,7 @@ pub struct ImageRequest {
     pub d2lod: PathBuf,
     pub blachaexe: PathBuf,
     pub rotate: bool,
-    pub scale: u8,
+    pub scale: f32,
     pub path_start: String,
     pub path_end: String,
 }
@@ -21,7 +21,7 @@ pub struct MapImage {
     pub rotated: bool,
     pub map_width: u32,
     pub map_height: u32,
-    pub scale: u32,
+    pub scale: f32,
     pub waypoints: String,
     pub exits: String,
     pub bosses: String,
@@ -38,8 +38,8 @@ impl MapImage {
         headers.push(format!("offsety: {}", self.offsety));
         headers.push(format!("mapwidth: {}", self.map_width));
         headers.push(format!("mapheight: {}", self.map_height));
-        headers.push(format!("originalwidth: {}", self.map_width * self.scale));
-        headers.push(format!("originalheight: {}", (self.map_height * self.scale) + 20));
+        headers.push(format!("originalwidth: {}", (self.map_width as f32 * self.scale) as u32));
+        headers.push(format!("originalheight: {}", ((self.map_height as f32 * self.scale) + 20.0) as u32));
         headers.push(format!("prerotated: {}", self.rotated));
         headers.push(format!("serverScale: {}", self.scale));
         headers.push(format!("waypoints: {}", self.waypoints));
@@ -55,7 +55,7 @@ impl MapImage {
 
 
 pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_request: &ImageRequest, path_data: Vec<Pos>) -> MapImage {
-    let scale = image_request.scale as u32;
+    let scale = image_request.scale;
     let height = (map_grid.len() as f64 * scale as f64) + 20.;
     let width = map_grid[0].len() as f64 * scale as f64;
     
@@ -63,18 +63,18 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
     let transform: Transform;
     if image_request.rotate {
         // there has to be a better way, I hate this
-        println!("{} {} rotated {} {}", map_grid.len(), map_grid[0].len(), width, height);
+        // println!("{} {} rotated {} {}", map_grid.len(), map_grid[0].len(), width, height);
         let angle: f64 = 45. * (std::f64::consts::PI / 180.);
         let x_translation = ((height as f64) * angle.sin()).abs();
         let rotated_width = ((width as f64) * angle.cos()).abs() + ((height as f64) * angle.sin()).abs();
         let rotated_height = ((width as f64) * angle.sin()).abs() + ((height as f64) * angle.cos()).abs();
         
-        println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
+        // println!("{} {} rotated {} {}", width, height, rotated_width, rotated_height);
         pixmap = Pixmap::new(rotated_width as u32, rotated_height as u32).unwrap();
-        transform = Transform::from_rotate(45.0).post_scale(scale as f32, scale as f32).post_translate((x_translation as f64) as f32, 0.);
+        transform = Transform::from_rotate(45.0).post_scale(scale, scale).post_translate((x_translation as f64) as f32, 0.);
     } else {
         pixmap = Pixmap::new(width as u32, height as u32).unwrap();
-        transform = Transform::from_scale(scale as f32, scale as f32);
+        transform = Transform::from_scale(scale, scale);
     }
     
     // draw the tiles
@@ -124,21 +124,22 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
 }
 
 fn draw_pathfinding(pixmap: &mut Pixmap, path_data: Vec<Pos>, transform: Transform) {
-    let mut pb = PathBuilder::new();
-    pb.move_to(path_data[0].0 as f32, path_data[0].1 as f32);
-    path_data.iter().for_each(|p| {
-        pb.line_to(p.0 as f32, p.1 as f32);
-    });
-    let path = pb.finish().unwrap();
+    if path_data.len() > 0 {
+        let mut pb = PathBuilder::new();
+        pb.move_to(path_data[0].0 as f32 + 1.0, path_data[0].1 as f32 + 1.0);
+        path_data.iter().for_each(|p| {
+            pb.line_to(p.0 as f32 + 1.0, p.1 as f32 + 1.0);
+        });
+        let path = pb.finish().unwrap();
 
-    let mut red = Paint::default();
-    red.set_color_rgba8(255, 0, 0, 255);
+        let mut red = Paint::default();
+        red.set_color_rgba8(255, 0, 0, 255);
 
-    let mut stroke = Stroke::default();
-    stroke.width = 1.0;
+        let mut stroke = Stroke::default();
+        stroke.width = 1.0;
 
-    pixmap.stroke_path(&path, &red, &stroke, transform, None);
-
+        pixmap.stroke_path(&path, &red, &stroke, transform, None);
+    }
 }
 
 fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> (String, String, String) {
@@ -151,8 +152,8 @@ fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transfor
     let box_height = 1.;
     for object in &level_data.objects {
         if object.name == "chest" {
-            let x = (object.x as f32) - (box_width / 2.);
-            let y = (object.y as f32) - (box_height / 2.);
+            let x = (object.x as f32) - (box_width / 2.) + 1.0;
+            let y = (object.y as f32) - (box_height / 2.) + 1.0;
             if level_data.id == 84 || level_data.id == 85 || level_data.id == 91 {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
                 pixmap.fill_rect(rect, &blue, transform, None);
@@ -165,15 +166,15 @@ fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transfor
             }
         }
         if object.name == "Shrine" {
-            let x = (object.x as f32) - (box_width / 2.);
-            let y = (object.y as f32) - (box_height / 2.);
+            let x = (object.x as f32) - (box_width / 2.) + 1.0;
+            let y = (object.y as f32) - (box_height / 2.) + 1.0;
             let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
             pixmap.fill_rect(rect, &blue, transform, None);
             shrines.push(format!("{},{}", object.x, object.y));
         }
         if object.name == "Well" {
-            let x = (object.x as f32) - (box_width / 2.);
-            let y = (object.y as f32) - (box_height / 2.);
+            let x = (object.x as f32) - (box_width / 2.) + 1.0;
+            let y = (object.y as f32) - (box_height / 2.) + 1.0;
             let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
             pixmap.fill_rect(rect, &blue, transform, None);
             well.push(format!("{},{}", object.x, object.y));
@@ -189,8 +190,8 @@ fn draw_waypoints(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transf
     let box_height = 12.;
     for object in &level_data.objects {
         if object.name == "Waypoint" {
-            let x = (object.x as f32) - (box_width / 2.);
-            let y = (object.y as f32) - (box_height / 2.);
+            let x = (object.x as f32) - (box_width / 2.) + 1.0;
+            let y = (object.y as f32) - (box_height / 2.) + 1.0;
             let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
             pixmap.fill_rect(rect, &yellow, transform, None);
             return format!("{},{}", object.x, object.y)
@@ -209,8 +210,8 @@ fn draw_exits(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform)
     let box_height = 12.;
     for object in &level_data.objects {
         if object.object_type == "exit" {
-            let x = (object.x as f32) - (box_width / 2.);
-            let y = (object.y as f32) - (box_height / 2.);
+            let x = (object.x as f32) - (box_width / 2.) + 1.0;
+            let y = (object.y as f32) - (box_height / 2.) + 1.0;
             if object.is_good_exit == true && level_data.id == 46 {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
                 pixmap.fill_rect(rect, &green, transform, None);
@@ -272,8 +273,8 @@ fn draw_npcs(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) 
                 x = 22;
                 y = 201;
             }
-            let nihl_x = (x as f32) - (box_size / 2.);
-            let nihl_y = (y as f32) - (box_size / 2.);
+            let nihl_x = (x as f32) - (box_size / 2.) + 1.0;
+            let nihl_y = (y as f32) - (box_size / 2.) + 1.0;
             
             let rect = Rect::from_xywh(nihl_x, nihl_y, box_size as f32, box_size as f32).unwrap();
             pixmap.fill_rect(rect, &red, transform, None);
@@ -284,8 +285,8 @@ fn draw_npcs(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) 
 }
 
 fn draw_dot(pixmap: &mut Pixmap, object: &Object, box_size: f32, transform: Transform, red: &Paint) {
-    let x = (object.x as f32) - (box_size / 2.);
-    let y = (object.y as f32) - (box_size / 2.);
+    let x = (object.x as f32) - (box_size / 2.) + 1.0;
+    let y = (object.y as f32) - (box_size / 2.) + 1.0;
     let rect = Rect::from_xywh(x, y, box_size as f32, box_size as f32).unwrap();
     pixmap.fill_rect(rect, &red, transform, None);
 }

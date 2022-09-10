@@ -50,7 +50,7 @@ fn generate_cli(generate_args: &ArgMatches) -> std::io::Result<()> {
     let seed = *generate_args.get_one::<u32>("seed").unwrap();
     let difficulty = *generate_args.get_one::<u32>("difficulty").unwrap();
     let mapid = *generate_args.get_one::<u32>("mapid").unwrap();
-    let scale = *generate_args.get_one::<u8>("scale").unwrap();
+    let scale = *generate_args.get_one::<f32>("scale").unwrap();
     let rotate = generate_args.is_present("rotate");
     let pathonly = generate_args.is_present("pathonly");
 

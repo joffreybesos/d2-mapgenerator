@@ -1,5 +1,6 @@
 /target
 .vscode
 /d2lod
+/game
 example.json
 *.png

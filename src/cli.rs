@@ -61,7 +61,7 @@ pub fn command_line_interface() -> ArgMatches {
                     .help("Diablo 2 LoD 1.13c game files (optional)")
                     .takes_value(true)
                     .value_parser(clap::value_parser!(std::path::PathBuf))
-                    .default_value("./d2lod")
+                    .default_value("./game")
             )
             .arg(
                 Arg::new("blachaexe")
@@ -117,7 +117,7 @@ pub fn command_line_interface() -> ArgMatches {
                     .help("Diablo 2 LoD 1.13c game files (optional)")
                     .takes_value(true)
                     .value_parser(clap::value_parser!(std::path::PathBuf))
-                    .default_value("./d2lod")
+                    .default_value("./game")
             )
             .arg(
                 Arg::new("blachaexe")
