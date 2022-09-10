@@ -48,7 +48,7 @@ impl MapImage {
         headers.push(format!("super_chests: {}", self.super_chests));
         headers.push(format!("shrines: {}", self.shrines));
         headers.push(format!("wells: {}", self.wells));
-        headers.push(format!("version: {}", "0.1.2"));
+        headers.push(format!("version: {}", "0.3.0"));
         headers.join("\n")
     }
 }
@@ -186,8 +186,8 @@ fn draw_objects(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transfor
 fn draw_waypoints(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> String {
     let mut yellow = Paint::default();
     yellow.set_color_rgba8(255, 255, 0, 255);
-    let box_width = 12.;
-    let box_height = 12.;
+    let box_width = 8.;
+    let box_height = 8.;
     for object in &level_data.objects {
         if object.name == "Waypoint" {
             let x = (object.x as f32) - (box_width / 2.) + 1.0;
@@ -206,8 +206,8 @@ fn draw_exits(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform)
     let mut green = Paint::default();
     green.set_color_rgba8(0, 255, 0, 255);
     let mut exit_header: Vec<String> = vec![];
-    let box_width = 12.;
-    let box_height = 12.;
+    let box_width = 8.;
+    let box_height = 8.;
     for object in &level_data.objects {
         if object.object_type == "exit" {
             let x = (object.x as f32) - (box_width / 2.) + 1.0;

@@ -100,7 +100,7 @@ pub async fn get_map_image(
                 .insert_header(("super_chests", p.super_chests))
                 .insert_header(("shrines", p.shrines))
                 .insert_header(("wells", p.wells))
-                .insert_header(("version", "0.1.2"))
+                .insert_header(("version", "0.3.0"))
                 .body(pngdata)
         }
         None => {

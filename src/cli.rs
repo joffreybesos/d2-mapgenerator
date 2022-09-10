@@ -3,7 +3,7 @@ use clap::{Arg, ArgMatches, Command, value_parser};
 pub fn command_line_interface() -> ArgMatches {
     Command::new("d2-mapgenerator")
         .about("Generate d2 map images")
-        .version("0.2.0")
+        .version("0.3.0")
         .arg_required_else_help(true)
         .author("joffreybesos")
         .disable_version_flag(true)
@@ -79,7 +79,7 @@ pub fn command_line_interface() -> ArgMatches {
                     .help("Pixel multiplier of the map image (optional)")
                     .takes_value(true)
                     .default_value("1")
-                    .value_parser(value_parser!(u8).range(0..=8))
+                    .value_parser(value_parser!(f32))
             )
             .arg(
                 Arg::new("rotate")
@@ -135,7 +135,7 @@ pub fn command_line_interface() -> ArgMatches {
                     .help("Pixel multiplier of the map image (optional)")
                     .takes_value(true)
                     .default_value("1")
-                    .value_parser(value_parser!(u8).range(0..=8))
+                    .value_parser(value_parser!(f32))
             )
         )
         .get_matches()
