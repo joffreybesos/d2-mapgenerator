@@ -90,10 +90,10 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
     }
     draw_pathfinding(&mut pixmap, path_data, transform);
     
-    let waypoints = draw_waypoints(&mut pixmap, &level_data, transform);
-    let exits = draw_exits(&mut pixmap, &level_data, transform);
-    let bosses = draw_npcs(&mut pixmap, &level_data, transform);
-    let (super_chests, shrines, wells) = draw_objects(&mut pixmap, &level_data, transform);
+    let waypoints = draw_waypoints(&mut pixmap, level_data, transform);
+    let exits = draw_exits(&mut pixmap, level_data, transform);
+    let bosses = draw_npcs(&mut pixmap, level_data, transform);
+    let (super_chests, shrines, wells) = draw_objects(&mut pixmap, level_data, transform);
     
 
     // save to disk
@@ -124,7 +124,7 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
 }
 
 fn draw_pathfinding(pixmap: &mut Pixmap, path_data: Vec<Pos>, transform: Transform) {
-    if path_data.len() > 0 {
+    if !path_data.is_empty() {
         let mut pb = PathBuilder::new();
         pb.move_to(path_data[0].0 as f32 + 1.0, path_data[0].1 as f32 + 1.0);
         path_data.iter().for_each(|p| {
@@ -135,8 +135,7 @@ fn draw_pathfinding(pixmap: &mut Pixmap, path_data: Vec<Pos>, transform: Transfo
         let mut red = Paint::default();
         red.set_color_rgba8(255, 0, 0, 255);
 
-        let mut stroke = Stroke::default();
-        stroke.width = 1.0;
+        let stroke = Stroke::default();
 
         pixmap.stroke_path(&path, &red, &stroke, transform, None);
     }
@@ -212,7 +211,7 @@ fn draw_exits(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform)
         if object.object_type == "exit" {
             let x = (object.x as f32) - (box_width / 2.) + 1.0;
             let y = (object.y as f32) - (box_height / 2.) + 1.0;
-            if object.is_good_exit == true && level_data.id == 46 {
+            if object.is_good_exit && level_data.id == 46 {
                 let rect = Rect::from_xywh(x, y, box_width as f32, box_height as f32).unwrap();
                 pixmap.fill_rect(rect, &green, transform, None);
                 exit_header.push(format!("{},{},{},{}", object.id, get_level_name(object.id), object.x, object.y));
@@ -288,5 +287,5 @@ fn draw_dot(pixmap: &mut Pixmap, object: &Object, box_size: f32, transform: Tran
     let x = (object.x as f32) - (box_size / 2.) + 1.0;
     let y = (object.y as f32) - (box_size / 2.) + 1.0;
     let rect = Rect::from_xywh(x, y, box_size as f32, box_size as f32).unwrap();
-    pixmap.fill_rect(rect, &red, transform, None);
+    pixmap.fill_rect(rect, red, transform, None);
 }

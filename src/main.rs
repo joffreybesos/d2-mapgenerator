@@ -125,8 +125,8 @@ pub fn generate_pathonly(image_request: ImageRequest) {
         .iter()
         .find(|a| a.id == image_request.mapid)
     {
-        let map_grid: MapGrid = mapgrid::level_data_to_walkable(&level_data);
-        let path_data: Vec<Pos> = pathfind::get_path_data(&level_data, &map_grid, &image_request.path_start, &image_request.path_end);
+        let map_grid: MapGrid = mapgrid::level_data_to_walkable(level_data);
+        let path_data: Vec<Pos> = pathfind::get_path_data(level_data, &map_grid, &image_request.path_start, &image_request.path_end);
         let path = serde_json::to_string(&path_data);
         match path {
             Ok(path) => println!("{}", path),
@@ -158,13 +158,13 @@ pub fn generate_single(image_request: ImageRequest) -> Option<MapImage> {
         .find(|a| a.id == image_request.mapid)
     {
         let edge_start = Instant::now();
-        let map_grid: MapGrid = mapgrid::level_data_to_walkable(&level_data);
-        let path_data: Vec<Pos> = pathfind::get_path_data(&level_data, &map_grid, &image_request.path_start, &image_request.path_end);
+        let map_grid: MapGrid = mapgrid::level_data_to_walkable(level_data);
+        let path_data: Vec<Pos> = pathfind::get_path_data(level_data, &map_grid, &image_request.path_start, &image_request.path_end);
         let edge_grid = mapgrid::level_data_to_edges(&map_grid);
         let edge_elapsed = edge_start.elapsed();
 
         let image_start = Instant::now();
-        let map_image: MapImage = image::generate_image(&edge_grid, &level_data, &image_request, path_data);
+        let map_image: MapImage = image::generate_image(&edge_grid, level_data, &image_request, path_data);
         let image_elapsed = image_start.elapsed();
         println!(
             "Generated single map {}, created grid in {}ms, image in {}ms",
@@ -206,13 +206,13 @@ pub fn generate_all(image_request: ImageRequest) {
     seed_data_json.levels.par_iter().for_each(|level_data| {
         if level_data.id == image_request.mapid || image_request.mapid == 0 {
             let edge_start = Instant::now();
-            let map_grid: MapGrid = mapgrid::level_data_to_walkable(&level_data);
+            let map_grid: MapGrid = mapgrid::level_data_to_walkable(level_data);
             let edge_grid = mapgrid::level_data_to_edges(&map_grid);
             let edge_elapsed = edge_start.elapsed();
 
             let image_start = Instant::now();
             let path_data = vec![];  // no pathing for 'all' maps
-            image::generate_image(&edge_grid, &level_data, &image_request, path_data);
+            image::generate_image(&edge_grid, level_data, &image_request, path_data);
             let image_elapsed = image_start.elapsed();
             println!(
                 "Generated map {}, created grid in {}ms, image in {}ms",

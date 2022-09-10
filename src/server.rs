@@ -50,14 +50,9 @@ pub async fn get_map_image(
             mapid
         ));
     }
-    let rotate = match query.rotate {
-        Some(r) => r == true,
-        None => false,
-    };
-    let scale = match query.serverScale {
-        Some(s) => s,
-        None => 3.0,
-    };
+    let rotate = query.rotate.unwrap_or(false);
+    let scale = query.serverScale.unwrap_or(3.0);
+    
     let path_start = match &query.pathStart {
         Some(s) => s,
         None => "0",
@@ -77,7 +72,7 @@ pub async fn get_map_image(
         panic!("{} '{}'", "ERROR: d2-mapgen.exe not in configured location, you have missing files".red().bold(), blachaexe.to_string_lossy().red());
     }
 
-    let image_request = ImageRequest { seed, difficulty, mapid, d2lod: d2lod.to_path_buf(), blachaexe: blachaexe.to_path_buf(), rotate, scale, path_start: path_start.to_string(), path_end: path_end.to_string()};
+    let image_request = ImageRequest { seed, difficulty, mapid, d2lod, blachaexe, rotate, scale, path_start: path_start.to_string(), path_end: path_end.to_string()};
 
     let map_image: Option<MapImage> = generate_single(image_request);
     match map_image {

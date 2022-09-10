@@ -55,7 +55,7 @@ impl Object {
     pub fn new_exit(x: u32, y: u32, owned_level_id: u32, exits: &Vec<Object>) -> Object {
         let mut new_exit_id = 0;
         let attached_levels = crate::walkableexits::get_attached_levels(owned_level_id);
-        if attached_levels.len() > 0 {
+        if !attached_levels.is_empty() {
             new_exit_id = attached_levels[0];
             // println!("1 level {} {}", owned_level_id, new_exit_id);
         }
@@ -65,10 +65,8 @@ impl Object {
             .iter()
             .filter(|e| (e.x as i32 - x as i32).abs() < 3 && (e.y as i32 - y as i32).abs() < 3)
             .collect();
-        if matching_exit.len() > 0 {
-            if matching_exit[0].owned_level_id > 0 {
-                new_exit_id = matching_exit[0].owned_level_id
-            }
+        if !matching_exit.is_empty() && matching_exit[0].owned_level_id > 0 {
+            new_exit_id = matching_exit[0].owned_level_id
             // println!("2 level {} {} {}", owned_level_id, matching_exit[0].owned_level_id, matching_exit[0].id);
         }
 

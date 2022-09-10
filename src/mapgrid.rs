@@ -23,7 +23,7 @@ impl MapGrid {
                     continue;
                 }
                 let new_position = Pos(position.0 + dx, position.1 + dy);
-                if new_position.0 < 0 || new_position.0 >= self.width.into() || new_position.1 < 0 || new_position.1 >= self.height.into() {
+                if new_position.0 < 0 || new_position.0 >= self.width || new_position.1 < 0 || new_position.1 >= self.height {
                     continue;
                 }
                 let board_value = self.tiles[new_position.1 as usize][new_position.0 as usize];
@@ -44,8 +44,7 @@ pub fn level_data_to_walkable(level_data: &LevelData) -> MapGrid {
     
     let mut map_grid: Vec<Vec<i32>> = vec![vec![0; lvl_width]; lvl_height];
     
-    let mut y: usize = 0;
-    for map_rows in &level_data.map {
+    for (y, map_rows) in level_data.map.iter().enumerate() {
         // each row
         let mut fill: bool = false;
         let mut x: usize = 0;
@@ -70,7 +69,6 @@ pub fn level_data_to_walkable(level_data: &LevelData) -> MapGrid {
                 }
             }
         }
-        y += 1;
     }
     MapGrid { tiles: map_grid, width: lvl_width as i16, height: lvl_height as i16 }
     
@@ -91,9 +89,7 @@ pub fn level_data_to_edges(map_grid: &MapGrid) -> Vec<Vec<i32>> {
                 if border {
                     edge_map_grid[row][col] = 1;
                 }
-            } else if col == 0 || row == 0 {
-                edge_map_grid[row][col] = 1;
-            } else if col == lvl_width.sub(1) || row == lvl_height.sub(1) {
+            } else if (col == 0 || row == 0) || (col == lvl_width.sub(1) || row == lvl_height.sub(1)) {
                 edge_map_grid[row][col] = 1;
             }
         }
@@ -106,46 +102,34 @@ pub fn level_data_to_edges(map_grid: &MapGrid) -> Vec<Vec<i32>> {
 fn check_surrounding_pixels(map_grid: &Vec<Vec<i32>>, irow: usize, icol: usize, width: usize, height: usize) -> bool {
     // above row
     if irow > 0 {
-        if icol > 0 {
-            if map_grid[irow-1][icol-1] == 1 {
-                return true
-            }
+        if icol > 0 && map_grid[irow-1][icol-1] == 1 {
+            return true
         }
         if map_grid[irow-1][icol] == 1 {
             return true
         }
-        if icol < width.wrapping_sub(1) {
-            if map_grid[irow-1][icol+1] == 1 {
-                return true
-            }
+        if icol < width.wrapping_sub(1) && map_grid[irow-1][icol+1] == 1 {
+            return true
         }
     }
     //same row
-    if icol > 0 {
-        if map_grid[irow][icol-1] == 1 {
-            return true
-        }
+    if icol > 0 && map_grid[irow][icol-1] == 1 {
+        return true
     }
-    if icol < width.wrapping_sub(1) {
-        if map_grid[irow][icol+1] == 1 {
-            return true
-        }
+    if icol < width.wrapping_sub(1) && map_grid[irow][icol+1] == 1 {
+        return true
     }
 
     // row beneath
     if irow < height.wrapping_sub(1) {
-        if icol > 0 {
-            if map_grid[irow + 1][icol-1] == 1 {
-                return true
-            }
+        if icol > 0 && map_grid[irow + 1][icol-1] == 1 {
+            return true
         }
         if map_grid[irow][icol] == 1 {
             return true
         }
-        if icol < width.wrapping_sub(1) {
-            if map_grid[irow + 1][icol+1] == 1 {
-                return true
-            }
+        if icol < width.wrapping_sub(1) && map_grid[irow + 1][icol+1] == 1 {
+            return true
         }
     }
 
@@ -161,9 +145,9 @@ pub fn print_map_grid(map_grid: &Vec<Vec<i32>>) {
         let mut row_str = String::new();
         for cell in row.iter() {
             if cell == &0 {
-                row_str.push_str(" ");
+                row_str.push(' ')
             } else {
-                row_str.push_str("X");
+                row_str.push('X')
             }
         }
         println!("{}", row_str);

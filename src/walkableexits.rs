@@ -6,8 +6,8 @@ pub fn get_walkable_exits(seed_data_json: &mut SeedData) {
     seed_data_json.levels.iter_mut().for_each(|o| {
         o.objects.iter_mut().for_each(|e| {
             if e.object_type == "exit" {
-                e.x = e.x + o.offset.x;
-                e.y = e.y + o.offset.y;
+                e.x += o.offset.x;
+                e.y += o.offset.y;
             }
         });
     });
@@ -33,8 +33,8 @@ pub fn get_walkable_exits(seed_data_json: &mut SeedData) {
     seed_data_json.levels.iter_mut().for_each(|o| {
         o.objects.iter_mut().for_each(|e| {
             if e.object_type == "exit" {
-                e.x = e.x - o.offset.x;
-                e.y = e.y - o.offset.y;
+                e.x -= o.offset.x;
+                e.y -= o.offset.y;
             }
         });
     });
@@ -54,7 +54,7 @@ fn get_valid_exits<'a>(
                 + level_data.map[1][0] as u32
                 + (level_data.map[1][1] as f32 / 2.) as u32;
             let y: u32 = level_data.offset.y;
-            exits.push(Object::new_exit(x, y, level_data.id, &exits));
+            exits.push(Object::new_exit(x, y, level_data.id, exits));
             // println!("{} Top exit 1 {} x{} y{}", level_data.id, exit1, x, y);
         }
     }
@@ -65,7 +65,7 @@ fn get_valid_exits<'a>(
                 + (level_data.map[1][0] + level_data.map[1][1] + level_data.map[1][2]) as u32
                 + (level_data.map[1][3] as f32 / 2.) as u32;
             let y: u32 = level_data.offset.y;
-            exits.push(Object::new_exit(x, y, level_data.id, &exits));
+            exits.push(Object::new_exit(x, y, level_data.id, exits));
             // println!("{} Top exit 2 {} x{} y{}", level_data.id, exit2, x, y);
         }
     }
@@ -78,7 +78,7 @@ fn get_valid_exits<'a>(
                 + (level_data.map[level_data.map.len() - 1][0]) as u32
                 + (level_data.map[level_data.map.len() - 1][1] as f32 / 2.) as u32;
             let y: u32 = level_data.offset.y + level_data.size.height;
-            exits.push(Object::new_exit(x, y, level_data.id, &exits));
+            exits.push(Object::new_exit(x, y, level_data.id, exits));
             // println!("{} Bottom exit 1 {} x{} y{}", level_data.id, exit1, x, y);
         }
     }
@@ -91,7 +91,7 @@ fn get_valid_exits<'a>(
                     + level_data.map[level_data.map.len() - 1][2]) as u32
                 + (level_data.map[level_data.map.len() - 1][3] as f32 / 2.) as u32;
             let y: u32 = level_data.offset.y + level_data.size.height;
-            exits.push(Object::new_exit(x, y, level_data.id, &exits));
+            exits.push(Object::new_exit(x, y, level_data.id, exits));
             // println!("{} Bottom exit 2 {} x{} y{}", level_data.id, exit2, x, y);
         }
         // for certain act 4 levels, remove some invalid exits
@@ -116,7 +116,7 @@ fn get_valid_exits<'a>(
                 let x: u32 = level_data.offset.x + level_data.size.width + 1;
                 let y: u32 =
                     level_data.offset.y + last_index as u32 - (right_count as f32 / 2.) as u32;
-                exits.push(Object::new_exit(x, y, level_data.id, &exits));
+                exits.push(Object::new_exit(x, y, level_data.id, exits));
                 // println!("{} Right exit {} x{} y{}", level_data.id, right_count, x, y);
             }
             right_count = 0;
@@ -127,7 +127,7 @@ fn get_valid_exits<'a>(
     let mut left_count = 0;
     let mut last_index = 0;
     for (index, map_cells) in level_data.map.iter().enumerate() {
-        if map_cells.len() > 0 && map_cells[0] == 0 {
+        if !map_cells.is_empty() && map_cells[0] == 0 {
             left_count += 1;
             last_index = index
         } else {
@@ -135,7 +135,7 @@ fn get_valid_exits<'a>(
                 let x: u32 = level_data.offset.x;
                 let y: u32 =
                     level_data.offset.y + last_index as u32 - (left_count as f32 / 2.) as u32;
-                exits.push(Object::new_exit(x, y, level_data.id, &exits));
+                exits.push(Object::new_exit(x, y, level_data.id, exits));
                 // println!("{} Left exit {} x{} y{}", level_data.id, left_count, x, y);
             }
             left_count = 0;

@@ -7,9 +7,9 @@ use crate::{mapgrid::{MapGrid}, jsondata::{LevelData}};
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Pos(pub i16, pub i16);
 
-pub fn get_path_data(level_data: &LevelData, map_grid: &MapGrid, path_start: &String, path_end: &String) -> Vec<Pos> {
-    let start_pos = get_pos(&level_data, path_start);
-    let end_pos = get_pos(&level_data, path_end);
+pub fn get_path_data(level_data: &LevelData, map_grid: &MapGrid, path_start: &str, path_end: &str) -> Vec<Pos> {
+    let start_pos = get_pos(level_data, path_start);
+    let end_pos = get_pos(level_data, path_end);
     let path_data = get_path(map_grid, start_pos, end_pos);
     match path_data {
         Some(vec) => vec.0,
@@ -18,7 +18,7 @@ pub fn get_path_data(level_data: &LevelData, map_grid: &MapGrid, path_start: &St
 }
 
 
-pub fn get_pos(level_data: &LevelData, path_pos: &String) -> Pos {
+pub fn get_pos(level_data: &LevelData, path_pos: &str) -> Pos {
     let mut actual_pos = Pos(0,0);
     if path_pos.contains(',') {
         let v: Vec<i16> = path_pos.split(',').map(|s| s.parse::<i16>().unwrap()).collect();

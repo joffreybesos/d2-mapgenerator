@@ -59,7 +59,7 @@ pub fn generate_data(seed: &u32, difficulty: &u32, d2lod: &PathBuf, blachaexe: &
     for line in stdout.lines() {
         if line.starts_with("{\"type\":\"map\"") {
             seed_data.push_str(line);
-            seed_data.push_str(",");
+            seed_data.push(',');
         }
     }
     seed_data.pop();
@@ -68,6 +68,5 @@ pub fn generate_data(seed: &u32, difficulty: &u32, d2lod: &PathBuf, blachaexe: &
     // save to file
     let cached_seed_data_file = cache::cached_file_name(seed, difficulty);
     fs::write(cached_seed_data_file, &seed_data).expect("Unable to write map data file");
-    return seed_data;
-
+    seed_data
 }
