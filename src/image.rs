@@ -228,8 +228,9 @@ fn draw_exits(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform)
 fn draw_npcs(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> String {
     let mut red = Paint::default();
     red.set_color_rgba8(255, 0, 0, 255);
+    red.anti_alias = true;
 
-    let box_size = 8.;
+    let box_size = 6.;
     let mut boss_header: Vec<String> = vec![];
     for object in &level_data.objects {
         // summoner
@@ -257,26 +258,30 @@ fn draw_npcs(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) 
             let mut x = object.x;
             let mut y = object.y;
             if x == 30 && y == 208 { // bottom right
-                x = 392;
-                y = 201;
+                x = 395;
+                y = 210;
             }
             if x == 206 && y == 32 { // bottom left
-                x = 207;
-                y = 386;
+                x = 210;
+                y = 395;
             }
             if x == 207 && y == 393 { // top right
-                x = 207;
-                y = 16;
+                x = 210;
+                y = 25;
             }
             if x == 388 && y == 216 { //top left
-                x = 22;
-                y = 201;
+                x = 25;
+                y = 210;
             }
             let nihl_x = (x as f32) - (box_size / 2.) + 1.0;
             let nihl_y = (y as f32) - (box_size / 2.) + 1.0;
             
-            let rect = Rect::from_xywh(nihl_x, nihl_y, box_size as f32, box_size as f32).unwrap();
-            pixmap.fill_rect(rect, &red, transform, None);
+            let circle_path = {
+                let mut pb = PathBuilder::new();
+                pb.push_circle(nihl_x, nihl_y, box_size);
+                pb.finish().unwrap()
+            };
+            pixmap.fill_path(&circle_path, &red, FillRule::Winding, transform, None);
             boss_header.push(format!("Nihlithak,{},{}", object.x, object.y));
         }
     }
@@ -286,6 +291,10 @@ fn draw_npcs(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) 
 fn draw_dot(pixmap: &mut Pixmap, object: &Object, box_size: f32, transform: Transform, red: &Paint) {
     let x = (object.x as f32) - (box_size / 2.) + 1.0;
     let y = (object.y as f32) - (box_size / 2.) + 1.0;
-    let rect = Rect::from_xywh(x, y, box_size as f32, box_size as f32).unwrap();
-    pixmap.fill_rect(rect, red, transform, None);
+    let circle_path = {
+        let mut pb = PathBuilder::new();
+        pb.push_circle(x, y, box_size);
+        pb.finish().unwrap()
+    };
+    pixmap.fill_path(&circle_path, &red, FillRule::Winding, transform, None);
 }
