@@ -28,6 +28,7 @@ pub struct MapImage {
     pub super_chests: String,
     pub shrines: String,
     pub wells: String,
+    pub quest_items: String,
     pub pixmap: Pixmap
 }
 
@@ -48,6 +49,7 @@ impl MapImage {
         headers.push(format!("super_chests: {}", self.super_chests));
         headers.push(format!("shrines: {}", self.shrines));
         headers.push(format!("wells: {}", self.wells));
+        headers.push(format!("quest_items: {}", self.quest_items));
         headers.push(format!("version: {}", "0.3.0"));
         headers.join("\n")
     }
@@ -94,7 +96,7 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
     let exits = draw_exits(&mut pixmap, level_data, transform);
     let bosses = draw_npcs(&mut pixmap, level_data, transform);
     let (super_chests, shrines, wells) = draw_objects(&mut pixmap, level_data, transform);
-    
+    let quest_items = draw_quest_items(&mut pixmap, level_data, transform);
 
     // save to disk
     let cached_image_file_name = cache::cached_image_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
@@ -106,13 +108,14 @@ pub fn generate_image(map_grid: &Vec<Vec<i32>>, level_data: &LevelData, image_re
         rotated: image_request.rotate,
         map_width: level_data.size.width,
         map_height: level_data.size.height,
+        scale,
         waypoints,
         exits,
         bosses,
         super_chests,
         shrines,
         wells,
-        scale,
+        quest_items,
         pixmap
     };
     let cached_headers_file_name = cache::cached_header_file_name(&image_request.seed, &image_request.difficulty, &level_data.id);
@@ -287,6 +290,31 @@ fn draw_npcs(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) 
     }
     boss_header.join("|")
 }
+
+
+fn draw_quest_items(pixmap: &mut Pixmap, level_data: &LevelData, transform: Transform) -> String {
+    let mut green = Paint::default();
+    green.set_color_rgba8(0, 255, 0, 255);
+    green.anti_alias = true;
+
+    let box_size = 4.;
+    let mut quest_header: Vec<String> = vec![];
+    for object in &level_data.objects {
+        match object.name.as_str() {
+            "orifice" | "gidbinn altar" | "Hellforge" | "cagedwussie1" | "Tome" | "LamTome" | "Inifuss" | "taintedsunaltar" | "Seal" | "StoneLambda" => {
+                draw_dot(pixmap, object, box_size, transform, &green);
+                quest_header.push(format!("{},{},{}", object.name, object.x, object.y));
+            },
+            _ => ()
+        }
+        if object.object_type == "npc" && level_data.id == 114 {
+            draw_dot(pixmap, object, box_size, transform, &green);
+            quest_header.push(format!("Anya,{},{}", object.x, object.y));
+        }
+    }
+    quest_header.join("|")
+}
+
 
 fn draw_dot(pixmap: &mut Pixmap, object: &Object, box_size: f32, transform: Transform, red: &Paint) {
     let x = (object.x as f32) - (box_size / 2.) + 1.0;
