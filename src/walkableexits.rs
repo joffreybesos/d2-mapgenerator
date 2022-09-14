@@ -46,10 +46,12 @@ fn get_valid_exits<'a>(
     level_data: &'a mut LevelData,
     exits: &'a mut Vec<Object>,
 ) -> &'a mut Vec<Object> {
+    // if there's a stretch of this many tiles at the edge of the map
+    let connecting_tiles = 2..=50; 
     // top exits
     if level_data.map[1].len() > 1 {
         let exit1 = level_data.map[1][1];
-        if exit1 > 2 && exit1 < 50 {
+        if connecting_tiles.contains(&exit1) {
             let x: u32 = level_data.offset.x
                 + level_data.map[1][0] as u32
                 + (level_data.map[1][1] as f32 / 2.) as u32;
@@ -60,7 +62,7 @@ fn get_valid_exits<'a>(
     }
     if level_data.map[1].len() > 3 {
         let exit2 = level_data.map[1][3];
-        if exit2 > 2 && exit2 < 50 {
+        if connecting_tiles.contains(&exit2) {
             let x: u32 = level_data.offset.x
                 + (level_data.map[1][0] + level_data.map[1][1] + level_data.map[1][2]) as u32
                 + (level_data.map[1][3] as f32 / 2.) as u32;
@@ -73,7 +75,7 @@ fn get_valid_exits<'a>(
     //bottom exits
     if level_data.map[level_data.map.len() - 1].len() > 1 {
         let exit1 = level_data.map[level_data.map.len() - 1][1];
-        if exit1 > 2 && exit1 < 50 {
+        if connecting_tiles.contains(&exit1) {
             let x: u32 = level_data.offset.x
                 + (level_data.map[level_data.map.len() - 1][0]) as u32
                 + (level_data.map[level_data.map.len() - 1][1] as f32 / 2.) as u32;
@@ -84,7 +86,7 @@ fn get_valid_exits<'a>(
     }
     if level_data.map[level_data.map.len() - 1].len() > 3 {
         let exit2 = level_data.map[level_data.map.len() - 1][3];
-        if exit2 > 2 && exit2 < 50 {
+        if connecting_tiles.contains(&exit2) {
             let x: u32 = level_data.offset.x
                 + (level_data.map[level_data.map.len() - 1][0]
                     + level_data.map[level_data.map.len() - 1][1]
@@ -104,18 +106,14 @@ fn get_valid_exits<'a>(
     let mut right_count = 0;
     let mut last_index = 0;
     for (index, map_cells) in level_data.map.iter().enumerate() {
-        let mut fill: bool = false;
-        for _ in map_cells.iter() {
-            fill = !fill;
-        }
+        let fill: bool = map_cells.len() % 2 == 1;
         if fill {
             right_count += 1;
             last_index = index
         } else {
-            if right_count > 1 && right_count < 50 {
+            if connecting_tiles.contains(&right_count) {
                 let x: u32 = level_data.offset.x + level_data.size.width + 1;
-                let y: u32 =
-                    level_data.offset.y + last_index as u32 - (right_count as f32 / 2.) as u32;
+                let y: u32 = level_data.offset.y + last_index as u32 - (right_count as f32 / 2.) as u32;
                 exits.push(Object::new_exit(x, y, level_data.id, exits));
                 // println!("{} Right exit {} x{} y{}", level_data.id, right_count, x, y);
             }
@@ -131,10 +129,9 @@ fn get_valid_exits<'a>(
             left_count += 1;
             last_index = index
         } else {
-            if left_count > 2 && left_count < 50 {
+            if connecting_tiles.contains(&left_count) {
                 let x: u32 = level_data.offset.x;
-                let y: u32 =
-                    level_data.offset.y + last_index as u32 - (left_count as f32 / 2.) as u32;
+                let y: u32 = level_data.offset.y + last_index as u32 - (left_count as f32 / 2.) as u32;
                 exits.push(Object::new_exit(x, y, level_data.id, exits));
                 // println!("{} Left exit {} x{} y{}", level_data.id, left_count, x, y);
             }
